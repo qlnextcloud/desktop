@@ -530,6 +530,8 @@ ActivitySettings::ActivitySettings(QWidget *parent)
     connect(_issuesWidget, &IssuesWidget::copyToClipboard,
         this, &ActivitySettings::slotCopyToClipboard);
 
+    setActivityTabHidden(true);
+
     // Add a progress indicator to spin if the acitivity list is updated.
     _progressIndicator = new QProgressIndicator(this);
     _tab->setCornerWidget(_progressIndicator);
