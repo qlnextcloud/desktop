@@ -513,10 +513,10 @@ ActivitySettings::ActivitySettings(QWidget *parent)
     hbox->addWidget(_tab);
     _activityWidget = new ActivityWidget(this);
     _activityTabId = _tab->addTab(_activityWidget, Theme::instance()->applicationIcon(), tr("Server Activity"));
-    connect(_activityWidget, &ActivityWidget::copyToClipboard, this, &ActivitySettings::slotCopyToClipboard);
-    connect(_activityWidget, &ActivityWidget::hideActivityTab, this, &ActivitySettings::setActivityTabHidden);
-    connect(_activityWidget, &ActivityWidget::guiLog, this, &ActivitySettings::guiLog);
-    connect(_activityWidget, &ActivityWidget::newNotification, this, &ActivitySettings::slotShowActivityTab);
+    //connect(_activityWidget, &ActivityWidget::copyToClipboard, this, &ActivitySettings::slotCopyToClipboard);
+    //connect(_activityWidget, &ActivityWidget::hideActivityTab, this, &ActivitySettings::setActivityTabHidden);
+    //connect(_activityWidget, &ActivityWidget::guiLog, this, &ActivitySettings::guiLog);
+    //connect(_activityWidget, &ActivityWidget::newNotification, this, &ActivitySettings::slotShowActivityTab);
 
     _protocolWidget = new ProtocolWidget(this);
     _protocolTabId = _tab->addTab(_protocolWidget, Theme::instance()->syncStateIcon(SyncResult::Success), tr("Sync Protocol"));
