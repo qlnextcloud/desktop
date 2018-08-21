@@ -1072,7 +1072,7 @@ void FolderStatusModel::slotFolderSyncStateChange(Folder *f)
     // update the icon etc. now
     slotUpdateFolderState(f);
 
-    if (state == SyncResult::Success && f->syncResult().folderStructureWasChanged()) {
+    if (state == SyncResult::Success) { // && f->syncResult().folderStructureWasChanged()) {
         // There is a new or a removed folder. reset all data
         auto &info = _folders[folderIndex];
         info.resetSubs(this, index(folderIndex));
