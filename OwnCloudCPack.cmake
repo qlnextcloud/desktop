@@ -18,7 +18,8 @@ set( CPACK_PACKAGE_VERSION  ${MIRALL_VERSION_FULL}${MIRALL_VERSION_SUFFIX} )
 if(APPLE)
     set( CPACK_GENERATOR "DragNDrop" )
     set( CPACK_SOURCE_GENERATOR "")
-    set( CPACK_PACKAGE_FILE_NAME ${APPLICATION_SHORTNAME}-${CPACK_PACKAGE_VERSION} )
+    #set( CPACK_PACKAGE_FILE_NAME ${APPLICATION_SHORTNAME}-${CPACK_PACKAGE_VERSION} )
+    set( CPACK_PACKAGE_FILE_NAME "${APPLICATION_SHORTNAME}-v${MIRALL_VERSION_MAJOR}.${MIRALL_VERSION_MINOR}-${MIRALL_VERSION_BUILD}" )
     set( CPACK_PACKAGE_ICON ${CMAKE_BINARY_DIR}/src/gui/ownCloud.icns)
 
     set( CPACK_DMG_DS_STORE "${CMAKE_SOURCE_DIR}/admin/osx/DS_Store.in")
@@ -40,7 +41,8 @@ endif()
 
 
 if(WIN32)
-    set( CPACK_PACKAGE_FILE_NAME  ${APPLICATION_SHORTNAME}-${CPACK_PACKAGE_VERSION}-setup )
+    #set( CPACK_PACKAGE_FILE_NAME  ${APPLICATION_SHORTNAME}-${CPACK_PACKAGE_VERSION}-setup )
+    set( CPACK_PACKAGE_FILE_NAME  "${APPLICATION_SHORTNAME}-v${MIRALL_VERSION_MAJOR}.${MIRALL_VERSION_MINOR}-${MIRALL_VERSION_BUILD}-setup" )
     # Package file name without extension. Also a directory of installer  cmake-2.5.0-Linux-i686
     # CPACK_GENERATOR   CPack generator to be used  STGZ;TGZ;TZ
     # CPACK_INCLUDE_TOPLEVEL_DIRECTORY    Controls whether CPack adds a top-level directory, usually of the form ProjectName-Version-OS, to the top of package tree.  0 to disable, 1 to enable
