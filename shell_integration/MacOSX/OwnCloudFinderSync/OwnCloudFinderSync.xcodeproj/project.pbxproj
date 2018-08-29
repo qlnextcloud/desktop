@@ -436,7 +436,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
-				OC_APPLICATION_NAME = ownCloud;
+				OC_APPLICATION_NAME = Ownnas;
 				OC_APPLICATION_REV_DOMAIN = com.owncloud.desktopclient;
 				OC_OEM_SHARE_ICNS = "";
 				OC_SOCKETAPI_TEAM_IDENTIFIER_PREFIX = "";
@@ -484,7 +484,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OC_APPLICATION_NAME = ownCloud;
+				OC_APPLICATION_NAME = Ownnas;
 				OC_APPLICATION_REV_DOMAIN = com.owncloud.desktopclient;
 				OC_OEM_SHARE_ICNS = "";
 				OC_SOCKETAPI_TEAM_IDENTIFIER_PREFIX = "";

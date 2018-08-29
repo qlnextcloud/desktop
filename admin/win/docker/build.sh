@@ -12,7 +12,10 @@ su - user << EOF
   mkdir build-win32
   cd build-win32
   ../admin/win/download_runtimes.sh
-  cmake .. -DCMAKE_TOOLCHAIN_FILE=../admin/win/Toolchain-mingw32-openSUSE.cmake -DWITH_CRASHREPORTER=ON
+  cmake .. -DCMAKE_TOOLCHAIN_FILE=../admin/win/Toolchain-mingw32-openSUSE.cmake \
+  -DWITH_CRASHREPORTER=ON \
+  -DMIRALL_VERSION_SUFFIX= \
+  -DMIRALL_VERSION_BUILD=`date +%Y%m%d%H%M%S`
   make -j4
   make package
   ctest .

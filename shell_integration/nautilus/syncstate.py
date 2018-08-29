@@ -31,8 +31,7 @@ from gi.repository import GObject, Nautilus
 # The reason is that we use a script to adopt this file for branding
 # by replacing this line with the branding app name. If the following
 # line is changed, the script can not match the pattern and fails.
-#appname = 'ownCloud'
-appname = 'Ownnas'
+appname = 'ownCloud'
 
 print("Initializing "+appname+"-client-nautilus extension")
 
