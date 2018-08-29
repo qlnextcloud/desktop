@@ -23,7 +23,8 @@
 #endif
 #include <QSslSocket>
 
-#include "owncloudtheme.h"
+//#include "owncloudtheme.h"
+#include "ownnastheme.h"
 
 #ifdef THEME_INCLUDE
 #define Mirall OCC // namespace hack to make old themes work

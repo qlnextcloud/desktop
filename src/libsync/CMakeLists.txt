@@ -40,7 +40,8 @@ set(libsync_SRCS
     abstractnetworkjob.cpp
     networkjobs.cpp
     owncloudpropagator.cpp
-    owncloudtheme.cpp
+    #owncloudtheme.cpp
+    ownnastheme.cpp
     progressdispatcher.cpp
     propagatorjobs.cpp
     propagatedownload.cpp
