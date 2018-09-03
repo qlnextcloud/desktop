@@ -76,6 +76,8 @@ SyncEngine::SyncEngine(AccountPtr account, const QString &localPath,
     , _uploadLimit(0)
     , _downloadLimit(0)
     , _anotherSyncNeeded(NoFollowUpSync)
+    , _localPathBackup(localPath)
+    , _remotePathBackup(remotePath)
 {
     qRegisterMetaType<SyncFileItem>("SyncFileItem");
     qRegisterMetaType<SyncFileItemPtr>("SyncFileItemPtr");
@@ -1610,6 +1612,53 @@ void SyncEngine::slotInsufficientRemoteStorage()
 
     _uniqueErrors.insert(msg);
     emit syncError(msg, ErrorCategory::InsufficientRemoteStorage);
+}
+
+QString SyncEngine::prepareLocalPath(const QString& path)
+{
+    QString p = QDir::fromNativeSeparators(path);
+    if (!p.endsWith(QLatin1Char('/'))) {
+        p.append(QLatin1Char('/'));
+    }
+    return p;
+}
+
+QString SyncEngine::prepareRemotePath(const QString &path)
+{
+    QString p = path;
+    if (p.endsWith(QLatin1Char('/'))) {
+        p.chop(1);
+    }
+    // Doing this second ensures the empty string or "/" come
+    // out as "/".
+    if (!p.startsWith(QLatin1Char('/'))) {
+        p.prepend(QLatin1Char('/'));
+    }
+    return p;
+}
+
+void SyncEngine::updateLocalPath(QString &subdir)
+{
+    _localPath = _localPathBackup + subdir;
+    _localPath = prepareLocalPath(_localPath);
+    char *localpath = _localPath.toUtf8().data();
+    set_local_uri(_csync_ctx.data(), localpath);
+}
+void SyncEngine::updateRemotePath(QString &subdir)
+{
+    _remotePath = _remotePathBackup + subdir;
+    _remotePath = prepareRemotePath(_remotePath);
+
+}
+
+void SyncEngine::restoreLocalPath()
+{
+    _localPath = _localPathBackup;
+    restore_local_uri(_csync_ctx.data());
+}
+void SyncEngine::restoreRemotePath()
+{
+    _remotePath = _remotePathBackup;
 }
 
 } // namespace OCC

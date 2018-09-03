@@ -405,6 +405,20 @@ int  OCSYNC_EXPORT csync_abort_requested(CSYNC *ctx);
 
 time_t OCSYNC_EXPORT oc_httpdate_parse( const char *date );
 
+
+/**
+ * ----isshe----
+ * @param ctx
+ * @param local
+ */
+void set_local_uri(CSYNC *ctx, const char *local);
+
+
+/**
+ * ----isshe----
+ * @param ctx
+ */
+void restore_local_uri(CSYNC *ctx);
 /**
  * }@
  */

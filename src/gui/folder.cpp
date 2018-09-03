@@ -60,6 +60,7 @@ Folder::Folder(const FolderDefinition &definition,
     , _journal(_definition.absoluteJournalPath())
     , _fileLog(new SyncRunFileLog)
     , _saveBackwardsCompatible(false)
+    , _enabledforceSyncSubFolder(false)
 {
     _timeSinceLastSyncStart.start();
     _timeSinceLastSyncDone.start();
@@ -543,6 +544,13 @@ void Folder::slotTerminateSync()
     qCInfo(lcFolder) << "folder " << alias() << " Terminating!";
 
     if (_engine->isSyncRunning()) {
+        // 不管同步结果如何，先把强制同步关了，强制同步失败，不进行重试
+        if (isEnabledSubFolderForceSync()) {
+            disableForceUpdateSubFolder();
+            _engine->restoreLocalPath();
+            _engine->restoreRemotePath();
+        }
+
         _engine->abort();
 
         setSyncState(SyncResult::SyncAbortRequested);
@@ -647,6 +655,12 @@ void Folder::startSync(const QStringList &pathList)
 
     _engine->setIgnoreHiddenFiles(_definition.ignoreHiddenFiles);
 
+    // 设置 _engine 的强制同步目录
+    if (isEnabledSubFolderForceSync()) {
+        _engine->updateLocalPath(_forceSyncSubFolderLocalPath);
+        _engine->updateRemotePath(_forceSyncSubFolderRemotePath);
+    }
+
     QMetaObject::invokeMethod(_engine.data(), "startSync", Qt::QueuedConnection);
 
     emit syncStarted();
@@ -743,6 +757,13 @@ void Folder::slotSyncFinished(bool success)
                      << " Qt" << qVersion()
                      << " SSL " << QSslSocket::sslLibraryVersionString().toUtf8().data()
         ;
+
+    // 不管同步结果如何，先把强制同步关了，强制同步失败，不进行重试
+    if (isEnabledSubFolderForceSync()) {
+        disableForceUpdateSubFolder();
+        _engine->restoreLocalPath();
+        _engine->restoreRemotePath();
+    }
 
     bool syncError = !_syncResult.errorStrings().isEmpty();
     if (syncError) {
@@ -1037,6 +1058,31 @@ QString FolderDefinition::absoluteJournalPath() const
 QString FolderDefinition::defaultJournalPath(AccountPtr account)
 {
     return SyncJournalDb::makeDbName(localPath, account->url(), targetPath, account->credentials()->user());
+}
+
+void Folder::enableForceUpdateSubFolder()
+{
+    _enabledforceSyncSubFolder = true;
+}
+
+void Folder::disableForceUpdateSubFolder()
+{
+    _enabledforceSyncSubFolder = false;
+}
+
+bool Folder::isEnabledSubFolderForceSync()
+{
+    return _enabledforceSyncSubFolder;
+}
+
+void Folder::setForceSyncSubFolderLocalPath(QString& localPath)
+{
+    _forceSyncSubFolderLocalPath = localPath;
+}
+
+void Folder::setForceSyncSubFolderRemotePath(QString& remotePath)
+{
+    _forceSyncSubFolderRemotePath = remotePath;
 }
 
 } // namespace OCC

@@ -99,6 +99,14 @@ public:
      */
     static qint64 minimumFileAgeForUpload; // in ms
 
+    //----isshe----: force sync sub folder
+    QString prepareLocalPath(const QString& path);
+    QString prepareRemotePath(const QString &path);
+    void updateLocalPath(QString &subdir);
+    void updateRemotePath(QString &subdir);
+    void restoreLocalPath();
+    void restoreRemotePath();
+
 signals:
     void csyncUnavailable();
 
@@ -270,6 +278,10 @@ private:
 
     /** List of unique errors that occurred in a sync run. */
     QSet<QString> _uniqueErrors;
+
+    // ----isshe----: force sync sub folder
+    QString _localPathBackup;
+    QString _remotePathBackup;
 };
 }
 

@@ -61,6 +61,27 @@ csync_s::csync_s(const char *localUri, OCC::SyncJournalDb *statedb)
   while(len > 0 && localUri[len - 1] == '/') --len;
 
   local.uri = c_strndup(localUri, len);
+  local_bk.uri = local.uri;
+}
+
+void restore_local_uri(CSYNC *ctx) {
+    if (ctx->local.uri && ctx->local.uri != ctx->local_bk.uri) {
+        SAFE_FREE(ctx->local.uri);
+        ctx->local.uri = ctx->local_bk.uri;
+    }
+}
+
+void set_local_uri(CSYNC *ctx, const char *local) {
+    size_t len = 0;
+
+    len = strlen(local);
+    while(len > 0 && local[len - 1] == '/') --len;
+
+    if (ctx->local.uri && ctx->local.uri != ctx->local_bk.uri) {
+        SAFE_FREE(ctx->local.uri);
+    }
+
+    ctx->local.uri = c_strndup(local, len);
 }
 
 int csync_update(CSYNC *ctx) {
@@ -331,6 +352,8 @@ int csync_s::reinitialize() {
 csync_s::~csync_s() {
   SAFE_FREE(local.uri);
   SAFE_FREE(error_string);
+  local.uri = nullptr;
+  local_bk.uri = nullptr;
 }
 
 void *csync_get_userdata(CSYNC *ctx) {

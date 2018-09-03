@@ -227,6 +227,14 @@ public:
       */
     void setSaveBackwardsCompatible(bool save);
 
+    // ----isshe----: force sync sub folder
+    void enableForceUpdateSubFolder();
+    void disableForceUpdateSubFolder();
+    bool isEnabledSubFolderForceSync();
+    void setForceSyncSubFolderLocalPath(QString& localPath);
+    void setForceSyncSubFolderRemotePath(QString& remotePath);
+
+
 signals:
     void syncStateChange();
     void syncStarted();
@@ -365,6 +373,13 @@ private:
      * path.
      */
     bool _saveBackwardsCompatible;
+
+    // ----isshe----: force sync sub folder
+    bool _enabledforceSyncSubFolder;
+    QString _forceSyncSubFolderLocalPath;
+    QString _forceSyncSubFolderRemotePath;
+    //FolderStatusModel::SubFolderInfo *_forceSyncSubFolderInfo;
+
 };
 }
 

@@ -254,6 +254,37 @@ void AccountSettings::doExpand()
     ui->_folderList->expandToDepth(0);
 }
 
+void AccountSettings::slotForceSyncSubFolder()
+{
+    QModelIndex selected = ui->_folderList->selectionModel()->currentIndex();
+    if( !selected.isValid() )
+        return;
+
+    FolderStatusModel::SubFolderInfo *subInfo = _model->infoForIndex(selected);
+
+    FolderMan *folderMan = FolderMan::instance();
+
+    // Terminate and reschedule any running sync
+    if (Folder* current = folderMan->currentSyncFolder()) {
+        bool enabledForceSync = current->isEnabledSubFolderForceSync();
+        folderMan->terminateSyncProcess();
+        if (!enabledForceSync)
+        {
+            folderMan->scheduleFolder(current);
+        }
+    }
+
+
+    Folder *f = subInfo->_folder;
+
+    // 在这里备份/更新信息，再Finish恢复信息
+    f->setForceSyncSubFolderLocalPath(subInfo->_path);
+    f->setForceSyncSubFolderRemotePath(subInfo->_path);
+    f->enableForceUpdateSubFolder();            // 开强制更新，在finished/abort中关闭
+
+    folderMan->scheduleFolderNext(f);
+}
+
 void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
 {
     QTreeView *tv = ui->_folderList;
@@ -272,6 +303,13 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
         QString fileName = _model->data(index, FolderStatusDelegate::FolderPathRole).toString();
         if (!QFile::exists(fileName)) {
             ac->setEnabled(false);
+        }
+
+        bool folderPaused = _model->data(index, FolderStatusDelegate::FolderSyncPaused).toBool();
+        if (!folderPaused) {
+            ac = menu->addAction(tr("Force sync now"));
+            ac->setEnabled(_accountState->isConnected());
+            connect(ac, SIGNAL(triggered(bool)), this, SLOT(slotForceSyncSubFolder()));
         }
 
         menu->popup(tv->mapToGlobal(pos));
