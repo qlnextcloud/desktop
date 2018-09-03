@@ -305,8 +305,9 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
             ac->setEnabled(false);
         }
 
-        bool folderPaused = _model->data(index, FolderStatusDelegate::FolderSyncPaused).toBool();
-        if (!folderPaused) {
+        FolderStatusModel::SubFolderInfo *subInfo = _model->infoForIndex(index);
+        Folder *subFolderParent = subInfo->_folder;
+        if (!subFolderParent->syncPaused()) {
             ac = menu->addAction(tr("Force sync now"));
             ac->setEnabled(_accountState->isConnected());
             connect(ac, SIGNAL(triggered(bool)), this, SLOT(slotForceSyncSubFolder()));
