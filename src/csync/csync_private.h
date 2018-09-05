@@ -154,6 +154,21 @@ struct OCSYNC_EXPORT csync_s {
 
   } parsed_traversal_excludes;
 
+
+  c_strlist_t *prioritys = nullptr;
+    /*
+      struct TraversalPrioritys {
+          ~TraversalPrioritys() {
+              c_strlist_destroy(list_patterns_fnmatch);
+          }
+          void prepare(c_strlist_t *prioritys);
+
+          QRegularExpression regexp_prioritys;
+          c_strlist_t *list_patterns_fnmatch = nullptr;
+
+      } parsed_traversal_prioritys;
+      */
+
   struct {
     std::unordered_map<ByteArrayRef, QByteArray, ByteArrayRefHash> folder_renamed_to; // map from->to
     std::unordered_map<ByteArrayRef, QByteArray, ByteArrayRefHash> folder_renamed_from; // map to->from

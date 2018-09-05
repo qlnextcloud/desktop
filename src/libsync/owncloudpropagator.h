@@ -31,6 +31,7 @@
 #include "bandwidthmanager.h"
 #include "accountfwd.h"
 #include "discoveryphase.h"
+#include "csync_priority.h"
 
 namespace OCC {
 
@@ -219,9 +220,20 @@ public:
     {
         _jobsToDo.append(job);
     }
+
+    void prependJob(PropagatorJob *job)
+    {
+        _jobsToDo.prepend(job);
+    }
+
     void appendTask(const SyncFileItemPtr &item)
     {
         _tasksToDo.append(item);
+    }
+
+    void prependTask(const SyncFileItemPtr &item)
+    {
+        _tasksToDo.prepend(item);
     }
 
     virtual bool scheduleSelfOrChild() Q_DECL_OVERRIDE;
@@ -285,9 +297,19 @@ public:
         _subJobs.appendJob(job);
     }
 
+    void prependJob(PropagatorJob *job)
+    {
+        _subJobs.prependJob(job);
+    }
+
     void appendTask(const SyncFileItemPtr &item)
     {
         _subJobs.appendTask(item);
+    }
+
+    void prependTask(const SyncFileItemPtr &item)
+    {
+        _subJobs.prependTask(item);
     }
 
     virtual bool scheduleSelfOrChild() Q_DECL_OVERRIDE;

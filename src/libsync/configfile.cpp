@@ -722,4 +722,35 @@ std::unique_ptr<QSettings> ConfigFile::settingsWithGroup(const QString &group, Q
     return settings;
 }
 
+
+// ----isshe----
+static const QLatin1String prioFile("sync-priority.lst");
+
+QString ConfigFile::priorityFile(Scope scope) const
+{
+    // prefer sync-exclude.lst, but if it does not exist, check for
+    // exclude.lst for compatibility reasons in the user writeable
+    // directories.
+    QFileInfo fi;
+
+    switch (scope) {
+        case UserScope:
+            fi.setFile(configPath(), prioFile);
+
+            if (!fi.isReadable()) {
+                fi.setFile(configPath(), QLatin1String("priority.lst"));
+            }
+            if (!fi.isReadable()) {
+                fi.setFile(configPath(), prioFile);
+            }
+            return fi.absoluteFilePath();
+        case SystemScope:
+            return QString();
+    }
+
+    ASSERT(false);
+    return QString();
+}
+
+
 }

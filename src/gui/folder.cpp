@@ -83,6 +83,11 @@ Folder::Folder(const FolderDefinition &definition,
     if (!setIgnoredFiles())
         qCWarning(lcFolder, "Could not read system exclude file");
 
+
+    if (!setPriorityFiles()) {
+        qCWarning(lcFolder, "Could not read priority file");
+    }
+
     connect(_accountState.data(), &AccountState::isConnectedChanged, this, &Folder::canSyncChanged);
     connect(_engine.data(), &SyncEngine::rootEtag, this, &Folder::etagRetreivedFromSyncEngine);
 
@@ -612,6 +617,27 @@ bool Folder::setIgnoredFiles()
     return _engine->excludedFiles().reloadExcludes();
 }
 
+bool Folder::setPriorityFiles()
+{
+    // Note: Doing this on each sync run and on Folder construction is
+    // unnecessary, because _engine->excludedFiles() persists between
+    // sync runs. This is not a big problem because ExcludedFiles maintains
+    // a QSet of files to load.
+    ConfigFile cfg;
+
+    // QString systemList = cfg.excludeFile(ConfigFile::SystemScope);
+    // qCInfo(lcFolder) << "Adding system ignore list to csync:" << systemList;
+    // _engine->excludedFiles().addExcludeFilePath(systemList);
+
+    QString userList = cfg.priorityFile(ConfigFile::UserScope);
+    if (QFile::exists(userList)) {
+        qCInfo(lcFolder) << "Adding user defined ignore list to csync:" << userList;
+        _engine->priorityFiles().addPriorityFilePath(userList);
+    }
+
+    return _engine->priorityFiles().reloadPrioritys();
+}
+
 void Folder::setProxyDirty(bool value)
 {
     _proxyDirty = value;
@@ -649,6 +675,14 @@ void Folder::startSync(const QStringList &pathList)
         QMetaObject::invokeMethod(this, "slotSyncFinished", Qt::QueuedConnection, Q_ARG(bool, false));
         return;
     }
+
+    /*
+    if (!setPriorityFiles()) {
+        qCWarning(lcFolder, "Could not read priority file");
+        QMetaObject::invokeMethod(this, "slotSyncFinished", Qt::QueuedConnection, Q_ARG(bool, false));
+        return;
+    }
+     */
 
     setDirtyNetworkLimits();
     setSyncOptions();

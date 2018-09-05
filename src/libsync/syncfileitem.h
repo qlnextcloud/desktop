@@ -116,6 +116,7 @@ public:
         , _inode(0)
         , _previousSize(0)
         , _previousModtime(0)
+        , _priority_flag(0)
     {
     }
 
@@ -254,6 +255,7 @@ public:
     // The size and modtime of the file getting overwritten (on the disk for downloads, on the server for uploads).
     quint64 _previousSize;
     time_t _previousModtime;
+    int _priority_flag;
 
     QString _directDownloadUrl;
     QString _directDownloadCookies;

@@ -503,7 +503,13 @@ void OwncloudPropagator::start(const SyncFileItemVector &items)
                 }
             } else {
                 PropagateDirectory *currentDirJob = directories.top().second;
-                currentDirJob->appendJob(dir);
+
+                //qDebug() << "----isshe-----: item->_file " << item->_file << ", priority_flag = " << item->_priority_flag;
+                if (item->_priority_flag == CSYNC_FILE_PRIORITY) {
+                    currentDirJob->prependJob(dir);
+                } else {
+                    currentDirJob->appendJob(dir);
+                }
             }
             directories.push(qMakePair(item->destination() + "/", dir));
         } else {
@@ -512,7 +518,12 @@ void OwncloudPropagator::start(const SyncFileItemVector &items)
                 directoriesToRemove.prepend(createJob(item));
                 removedDirectory = item->_file + "/";
             } else {
-                directories.top().second->appendTask(item);
+                //qDebug() << "----isshe-----: item->_file " << item->_file << ", priority_flag = " << item->_priority_flag;
+                if (item->_priority_flag == CSYNC_FILE_PRIORITY) {
+                    directories.top().second->prependTask(item);
+                } else {
+                    directories.top().second->appendTask(item);
+                }
             }
         }
     }

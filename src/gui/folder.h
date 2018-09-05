@@ -315,6 +315,8 @@ private slots:
 private:
     bool setIgnoredFiles();
 
+    bool setPriorityFiles();
+
     void showSyncResultPopup();
 
     void checkLocalPath();

@@ -149,6 +149,20 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="priorityFilesButton">
+          <property name="text">
+           <string>Edit Priority Files</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="policyRulesButton">
+          <property name="text">
+           <string>Edit Policy</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_4">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>

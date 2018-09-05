@@ -39,6 +39,7 @@
 #include "accountfwd.h"
 #include "discoveryphase.h"
 #include "common/checksums.h"
+#include "priorityfiles.h"
 
 class QProcess;
 
@@ -106,6 +107,7 @@ public:
     void updateRemotePath(QString &subdir);
     void restoreLocalPath();
     void restoreRemotePath();
+    PriorityFiles &priorityFiles() { return *_priorityFiles; }
 
 signals:
     void csyncUnavailable();
@@ -229,6 +231,7 @@ private:
     QScopedPointer<ProgressInfo> _progressInfo;
 
     QScopedPointer<ExcludedFiles> _excludedFiles;
+    QScopedPointer<PriorityFiles> _priorityFiles;
     QScopedPointer<SyncFileStatusTracker> _syncFileStatusTracker;
     Utility::StopWatch _stopWatch;
 

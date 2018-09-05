@@ -21,6 +21,7 @@
 namespace OCC {
 class IgnoreListEditor;
 class SyncLogDialog;
+class PriorityListEditor;
 
 namespace Ui {
     class GeneralSettings;
@@ -47,11 +48,19 @@ private slots:
     void slotIgnoreFilesEditor();
     void loadMiscSettings();
 
+    //----isshe----
+    void slotPriorityFilesEditor();
+
+
 private:
     Ui::GeneralSettings *_ui;
     QPointer<IgnoreListEditor> _ignoreEditor;
     QPointer<SyncLogDialog> _syncLogDialog;
     bool _currentlyLoading;
+
+    //----isshe----
+    QPointer<PriorityListEditor> _priorityEditor;
+
 };
 
 

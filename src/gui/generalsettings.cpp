@@ -26,6 +26,7 @@
 #include "updater/updater.h"
 #include "updater/ocupdater.h"
 #include "ignorelisteditor.h"
+#include "prioritylisteditor.h"
 
 #include "config.h"
 
@@ -85,6 +86,8 @@ GeneralSettings::GeneralSettings(QWidget *parent)
     _ui->monoIconsCheckBox->setVisible(Theme::instance()->monoIconsAvailable());
 
     connect(_ui->ignoredFilesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotIgnoreFilesEditor);
+    connect(_ui->priorityFilesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotPriorityFilesEditor);
+    //connect(_ui->policyRulesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotPriorityFilesEditor);
 
     // accountAdded means the wizard was finished and the wizard might change some options.
     connect(AccountManager::instance(), &AccountManager::accountAdded, this, &GeneralSettings::loadMiscSettings);
@@ -170,6 +173,17 @@ void GeneralSettings::slotIgnoreFilesEditor()
         _ignoreEditor->open();
     } else {
         ownCloudGui::raiseDialog(_ignoreEditor);
+    }
+}
+
+void GeneralSettings::slotPriorityFilesEditor()
+{
+    if (_priorityEditor.isNull()) {
+        _priorityEditor = new PriorityListEditor(this);
+        _priorityEditor->setAttribute(Qt::WA_DeleteOnClose, true);
+        _priorityEditor->open();
+    } else {
+        ownCloudGui::raiseDialog(_priorityEditor);
     }
 }
 

@@ -77,7 +77,9 @@ set(csync_SRCS
   csync_rename.cpp
 
   vio/csync_vio.cpp
-)
+
+  csync_priority.cpp
+  )
 
 if (WIN32)
     list(APPEND csync_SRCS

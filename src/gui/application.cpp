@@ -38,6 +38,7 @@
 #include "excludedfiles.h"
 #include "owncloudsetupwizard.h"
 #include "version.h"
+#include "priorityfiles.h"
 
 #include "config.h"
 
@@ -147,6 +148,10 @@ Application::Application(int &argc, char **argv)
     excludes.addExcludeFilePath(cfg.excludeFile(ConfigFile::SystemScope));
     excludes.addExcludeFilePath(cfg.excludeFile(ConfigFile::UserScope));
     excludes.reloadExcludes();
+
+    PriorityFiles &prioritys = PriorityFiles::instance();
+    prioritys.addPriorityFilePath(cfg.priorityFile(ConfigFile::UserScope));
+    prioritys.reloadPrioritys();
 
     _folderManager.reset(new FolderMan);
 

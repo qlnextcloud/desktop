@@ -19,6 +19,9 @@ set(client_UI
     folderwizardtargetpage.ui
     generalsettings.ui
     ignorelisteditor.ui
+    prioritylisteditor.ui
+    syncruleseditor.ui
+    policyruleseditor.ui
     networksettings.ui
     protocolwidget.ui
     issueswidget.ui
@@ -55,6 +58,9 @@ set(client_SRCS
     folderwizard.cpp
     generalsettings.cpp
     ignorelisteditor.cpp
+    prioritylisteditor.cpp
+    syncruleseditor.cpp
+    policyruleseditor.cpp
     lockwatcher.cpp
     logbrowser.cpp
     networksettings.cpp

@@ -143,6 +143,10 @@ public:
          with the given parent. If no parent is specified, the caller must destroy the settings */
     static std::unique_ptr<QSettings> settingsWithGroup(const QString &group, QObject *parent = 0);
 
+
+    //----isshe----
+    QString priorityFile(Scope scope) const;
+
 protected:
     QVariant getPolicySetting(const QString &policy, const QVariant &defaultValue = QVariant()) const;
     void storeData(const QString &group, const QString &key, const QVariant &value);

@@ -92,6 +92,7 @@ SyncEngine::SyncEngine(AccountPtr account, const QString &localPath,
     _csync_ctx.reset(new CSYNC(localPath.toUtf8().data(), journal));
 
     _excludedFiles.reset(new ExcludedFiles(&_csync_ctx->excludes));
+    _priorityFiles.reset(new PriorityFiles(&_csync_ctx->prioritys));
     _syncFileStatusTracker.reset(new SyncFileStatusTracker(this));
 
     _clearTouchedFilesTimer.setSingleShot(true);
@@ -107,6 +108,7 @@ SyncEngine::~SyncEngine()
     _thread.quit();
     _thread.wait();
     _excludedFiles.reset();
+    _priorityFiles.reset();
 }
 
 //Convert an error code from csync to a user readable string.
@@ -688,6 +690,8 @@ int SyncEngine::treewalkFile(csync_file_stat_t *file, csync_file_stat_t *other, 
         item->_previousModtime = other->modtime;
         item->_previousSize = other->size;
     }
+
+    item->_priority_flag = _priorityFiles->isPriority(_localPath + item->_file, localPath());
 
     _syncItemMap.insert(key, item);
     return re;
