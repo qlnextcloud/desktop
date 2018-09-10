@@ -110,7 +110,7 @@ void IgnoreListEditor::slotUpdateLocalIgnoreList()
                 } else if (patternItem->text().startsWith('#')) {
                     prepend = "\\";
                 }
-                ignores.write(prepend + patternItem->text().toUtf8() + '\n');
+                ignores.write(prepend + patternItem->text().toUtf8() + "\n");
             }
         }
     } else {

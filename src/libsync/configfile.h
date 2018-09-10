@@ -21,6 +21,8 @@
 #include <QSettings>
 #include <QString>
 #include <QVariant>
+#include "common/configdb.h"
+
 
 class QWidget;
 class QHeaderView;
@@ -146,6 +148,9 @@ public:
 
     //----isshe----
     QString priorityFile(Scope scope) const;
+    QString globalConfigDbFile() const;
+    QString absoluteConfigDbPath() const;
+    ConfigDb * getGlobalConfigDb() const;
 
 protected:
     QVariant getPolicySetting(const QString &policy, const QVariant &defaultValue = QVariant()) const;
@@ -165,6 +170,8 @@ private:
     static bool _askedUser;
     static QString _oCVersion;
     static QString _confDir;
+    static QString _globalConfigDbFile;
+    static ConfigDb *_pconfigDb;
 };
 }
 #endif // CONFIGFILE_H

@@ -25,14 +25,16 @@ namespace OCC {
         ConfigFile cfgFile;
         readPriorityFile(cfgFile.priorityFile(ConfigFile::UserScope));
 
-        connect(this, &QDialog::accepted, this, &PriorityListEditor::slotUpdateLocalIgnoreList);
+        connect(this, &QDialog::accepted, this, &PriorityListEditor::slotUpdateLocalPriorityList);
         connect(ui->addPriorityFileButton, &QAbstractButton::clicked, this, &PriorityListEditor::slotAddPattern);
         connect(ui->rmPriorityFilePushButton, &QAbstractButton::clicked, this, &PriorityListEditor::slotRemoveCurrentItem);
+        connect(ui->priorityFilesTableWidget, &QTableWidget::itemSelectionChanged, this, &PriorityListEditor::slotItemSelectionChanged);
 
         ui->priorityFilesTableWidget->resizeColumnsToContents();
         ui->priorityFilesTableWidget->horizontalHeader()->setResizeMode(patternCol, QHeaderView::Stretch);
         ui->priorityFilesTableWidget->verticalHeader()->setVisible(false);
-
+        ui->rmPriorityFilePushButton->setEnabled(false);
+        ui->priorityFilesTableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     }
 
     PriorityListEditor::~PriorityListEditor()
@@ -81,7 +83,7 @@ namespace OCC {
         addPattern(QString(), true);
     }
 
-    void PriorityListEditor::slotUpdateLocalIgnoreList()
+    void PriorityListEditor::slotUpdateLocalPriorityList()
     {
         ConfigFile cfgFile;
         QString priorityFile = cfgFile.priorityFile(ConfigFile::UserScope);
@@ -98,7 +100,7 @@ namespace OCC {
                     } else if (patternItem->text().startsWith('#')) {
                         prepend = "\\";
                     }
-                    priority.write(prepend + patternItem->text().toUtf8() + '\n');
+                    priority.write(prepend + patternItem->text().toUtf8() + "\n");
                 }
             }
         } else {
@@ -134,6 +136,16 @@ namespace OCC {
     void PriorityListEditor::slotRemoveCurrentItem()
     {
         ui->priorityFilesTableWidget->removeRow(ui->priorityFilesTableWidget->currentRow());
+    }
+
+    void PriorityListEditor::slotItemSelectionChanged()
+    {
+        if (ui->priorityFilesTableWidget->rowCount() <= 0) {
+            ui->rmPriorityFilePushButton->setEnabled(false);
+            return;
+        }
+
+        ui->rmPriorityFilePushButton->setEnabled(true);
     }
 
 }

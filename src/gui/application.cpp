@@ -153,6 +153,9 @@ Application::Application(int &argc, char **argv)
     prioritys.addPriorityFilePath(cfg.priorityFile(ConfigFile::UserScope));
     prioritys.reloadPrioritys();
 
+    // 全局数据库操作放这里
+    cfg.globalConfigDbFile();
+
     _folderManager.reset(new FolderMan);
 
     connect(this, &SharedTools::QtSingleApplication::messageReceived, this, &Application::slotParseMessage);

@@ -27,6 +27,7 @@
 #include "updater/ocupdater.h"
 #include "ignorelisteditor.h"
 #include "prioritylisteditor.h"
+#include "policyruleseditor.h"
 
 #include "config.h"
 
@@ -87,7 +88,7 @@ GeneralSettings::GeneralSettings(QWidget *parent)
 
     connect(_ui->ignoredFilesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotIgnoreFilesEditor);
     connect(_ui->priorityFilesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotPriorityFilesEditor);
-    //connect(_ui->policyRulesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotPriorityFilesEditor);
+    connect(_ui->policyRulesButton, &QAbstractButton::clicked, this, &GeneralSettings::slotPolicyRulesEditor);
 
     // accountAdded means the wizard was finished and the wizard might change some options.
     connect(AccountManager::instance(), &AccountManager::accountAdded, this, &GeneralSettings::loadMiscSettings);
@@ -184,6 +185,17 @@ void GeneralSettings::slotPriorityFilesEditor()
         _priorityEditor->open();
     } else {
         ownCloudGui::raiseDialog(_priorityEditor);
+    }
+}
+
+void GeneralSettings::slotPolicyRulesEditor()
+{
+    if (_policyRulesEditor.isNull()) {
+        _policyRulesEditor = new PolicyRulesEditor(this);
+        _policyRulesEditor->setAttribute(Qt::WA_DeleteOnClose, true);
+        _policyRulesEditor->open();
+    } else {
+        ownCloudGui::raiseDialog(_policyRulesEditor);
     }
 }
 

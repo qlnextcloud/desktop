@@ -34,6 +34,7 @@
 #include <QLoggingCategory>
 #include <QSettings>
 #include <QNetworkProxy>
+#include <common/configdb.h>
 
 #define DEFAULT_REMOTE_POLL_INTERVAL 30000 // default remote poll time in milliseconds
 #define DEFAULT_MAX_LOG_LINES 20000
@@ -81,6 +82,8 @@ const char certPath[] = "http_certificatePath";
 const char certPasswd[] = "http_certificatePasswd";
 QString ConfigFile::_confDir = QString::null;
 bool ConfigFile::_askedUser = false;
+QString ConfigFile::_globalConfigDbFile = QString::null;
+ConfigDb *ConfigFile::_pconfigDb = nullptr;
 
 ConfigFile::ConfigFile()
 {
@@ -94,6 +97,12 @@ ConfigFile::ConfigFile()
 
     QSettings settings(config, QSettings::IniFormat);
     settings.beginGroup(defaultConnection());
+
+    if (_globalConfigDbFile.isEmpty()) {
+        _globalConfigDbFile = ConfigDb::makeDbName(configPath());
+    }
+    _pconfigDb = new ConfigDb(absoluteConfigDbPath());
+
 }
 
 bool ConfigFile::setConfDir(const QString &value)
@@ -752,5 +761,23 @@ QString ConfigFile::priorityFile(Scope scope) const
     return QString();
 }
 
+QString ConfigFile::globalConfigDbFile() const
+{
+    if (_globalConfigDbFile.isEmpty()) {
+        _globalConfigDbFile = ConfigDb::makeDbName(configPath());
+    }
+    qDebug() << "----isshe----: _globalConfigDbFile = " << _globalConfigDbFile;
+    qDebug() << "----isshe----: absoluteConfigDbPath = " << absoluteConfigDbPath();
+    return _globalConfigDbFile;
+}
+
+QString ConfigFile::absoluteConfigDbPath() const
+{
+    return QDir(_confDir).filePath(_globalConfigDbFile);
+}
+
+ConfigDb * ConfigFile::getGlobalConfigDb() const {
+    return _pconfigDb;
+}
 
 }

@@ -22,6 +22,7 @@ namespace OCC {
 class IgnoreListEditor;
 class SyncLogDialog;
 class PriorityListEditor;
+class PolicyRulesEditor;
 
 namespace Ui {
     class GeneralSettings;
@@ -50,6 +51,7 @@ private slots:
 
     //----isshe----
     void slotPriorityFilesEditor();
+    void slotPolicyRulesEditor();
 
 
 private:
@@ -60,6 +62,7 @@ private:
 
     //----isshe----
     QPointer<PriorityListEditor> _priorityEditor;
+    QPointer<PolicyRulesEditor> _policyRulesEditor;
 
 };
 

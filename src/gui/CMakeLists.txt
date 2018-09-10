@@ -22,6 +22,7 @@ set(client_UI
     prioritylisteditor.ui
     syncruleseditor.ui
     policyruleseditor.ui
+    polirysimgleeditor.ui
     networksettings.ui
     protocolwidget.ui
     issueswidget.ui
@@ -61,6 +62,7 @@ set(client_SRCS
     prioritylisteditor.cpp
     syncruleseditor.cpp
     policyruleseditor.cpp
+    polirysimgleeditor.cpp
     lockwatcher.cpp
     logbrowser.cpp
     networksettings.cpp

@@ -20,21 +20,14 @@
       <string>Sync Policy Manage</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="1">
-       <widget class="QPushButton" name="addPolicyRulePushButton">
+      <item row="4" column="0">
+       <widget class="QLabel" name="descPolicyRulesLabel">
         <property name="text">
-         <string>Add</string>
+         <string>description</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="rmPolicyRulePushButton">
-        <property name="text">
-         <string>Remove</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -47,40 +40,59 @@
         </property>
        </spacer>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="descPolicyRulesLabel">
+      <item row="2" column="1">
+       <widget class="QPushButton" name="rmPolicyRulePushButton">
         <property name="text">
-         <string>description</string>
+         <string>Remove</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" rowspan="3">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="addPolicyRulePushButton">
+        <property name="text">
+         <string>Add</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" rowspan="4">
        <widget class="QTableWidget" name="policyRulesTableWidget">
         <column>
          <property name="text">
-          <string>name</string>
+          <string>id</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>days</string>
+          <string>Name</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>start time in day</string>
+          <string>DayVals</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>end time in day</string>
+          <string>Days</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>interval</string>
+          <string>Interval</string>
          </property>
         </column>
+        <column>
+         <property name="text">
+          <string>Referenced</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="editPolicyRulesPushButton">
+        <property name="text">
+         <string>Edit</string>
+        </property>
        </widget>
       </item>
      </layout>
