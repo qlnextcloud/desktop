@@ -25,6 +25,7 @@
 #include "quotainfo.h"
 #include "progressdispatcher.h"
 #include "owncloudgui.h"
+#include "syncruleeditor.h"
 
 class QModelIndex;
 class QNetworkReply;
@@ -92,6 +93,7 @@ protected slots:
 
     // ----isshe----: force sync sub folder
     void slotForceSyncSubFolder();
+    void slotSetSyncRule();
 
 
 private:

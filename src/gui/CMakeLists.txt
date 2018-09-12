@@ -20,9 +20,9 @@ set(client_UI
     generalsettings.ui
     ignorelisteditor.ui
     prioritylisteditor.ui
-    syncruleseditor.ui
     policyruleseditor.ui
     polirysimgleeditor.ui
+    syncruleeditor.ui
     networksettings.ui
     protocolwidget.ui
     issueswidget.ui
@@ -60,9 +60,9 @@ set(client_SRCS
     generalsettings.cpp
     ignorelisteditor.cpp
     prioritylisteditor.cpp
-    syncruleseditor.cpp
     policyruleseditor.cpp
     polirysimgleeditor.cpp
+    syncruleeditor.cpp
     lockwatcher.cpp
     logbrowser.cpp
     networksettings.cpp

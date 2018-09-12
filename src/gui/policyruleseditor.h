@@ -33,7 +33,6 @@ namespace OCC {
             private slots:
         void slotAddPattern();
         void slotUpdatePolicyRules();
-        void slotStateChanged(int state);
         void slotRemoveCurrentItem();
         void slotItemSelectionChanged();
         void slotEditCurrentItem();
@@ -41,7 +40,6 @@ namespace OCC {
 
     private:
         Ui::PolicyRulesEditor *ui;
-        // ConfigDb _configDb;
         ConfigDb *_pconfigDb;
     };
 

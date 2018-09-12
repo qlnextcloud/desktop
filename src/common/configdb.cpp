@@ -22,9 +22,8 @@ namespace OCC {
     ConfigDb::ConfigDb(const QString &dbFilePath, QObject *parent)
             : QObject(parent)
             , _dbFile(dbFilePath)
-            , _mutex(QMutex::Recursive)
+            , _mutex(QMutex::Recursive)     // QMutex::NonRecursive) //
             , _transaction(0)
-            //, _metadataTableIsEmpty(false)
     {
     }
 
@@ -41,14 +40,13 @@ namespace OCC {
 
         commitTransaction();
 
-        _getPolicyRulesQuery.reset(0);
-        _addPolicyRulesQuery.reset(0);
-        _addPolicyRulesWithIdQuery.reset(0);
-        _delPolicyRuleByIdsQuery.reset(0);
-        _delPolicyRuleWithoutIdsQuery.reset(0);
-        _delAllPolicyRulesQuery.reset(0);
-        _setPolicyRulesQuery.reset(0);
-        _setPolicyRulesIsReferencedQuery.reset(0);
+        _getPolicyRulesQuery.reset(nullptr);
+        _addPolicyRulesQuery.reset(nullptr);
+        _addPolicyRulesWithIdQuery.reset(nullptr);
+        _delAllPolicyRulesQuery.reset(nullptr);
+        _getPolicyRuleByIdQuery.reset(nullptr);
+        _getPolicyRulesReferencedByIdQuery.reset(nullptr);
+        _setPolicyRuleReferencedQuery.reset(nullptr);
 
         _db.close();
     }
@@ -249,12 +247,11 @@ namespace OCC {
         SqlQuery createQuery(_db);
 
         //----isshe----
-        // days: [0,1,2,3,4,5,6], json类型
         // days: "0 1 1 1 1 1 0", "1" 表示启用，不用整数，不知道会不会有大小端的问题
         createQuery.prepare("CREATE TABLE IF NOT EXISTS policyrules("
                             "id INTEGER PRIMARY KEY,"
                             "name TEXT UNIQUE,"
-                            "days VARCHAR(8) DEFAULT '0111110',"
+                            "days VARCHAR(8) DEFAULT '1111100',"
                             "starttime INTEGER,"
                             "endtime INTEGER,"
                             "interval INTEGER,"
@@ -294,33 +291,26 @@ namespace OCC {
             return sqlFail("prepare _addPolicyRulesWithIdQuery", *_addPolicyRulesWithIdQuery);
         }
 
-        _setPolicyRulesQuery.reset(new SqlQuery(_db));
-        if (_setPolicyRulesQuery->prepare("UPDATE policyrules SET "
-                                          "name='?2', days='?3', interval='?4', "
-                                          "referenced='?5' WHERE id=?1;")) {
-            return sqlFail("prepare _setPolicyRulesQuery", *_setPolicyRulesQuery);
-        }
-
-        _setPolicyRulesIsReferencedQuery.reset(new SqlQuery(_db));
-        if (_setPolicyRulesIsReferencedQuery->prepare("UPDATE policyrules SET "
-                                          "referenced='?2' WHERE id=?1;")) {
-            return sqlFail("prepare _setPolicyRulesIsReferencedQuery", *_setPolicyRulesIsReferencedQuery);
-        }
-        _delPolicyRuleByIdsQuery.reset(new SqlQuery(_db));
-        if (_delPolicyRuleByIdsQuery->prepare("DELETE FROM policyrules WHERE id IN ( ?1 );")) {
-            return sqlFail("prepare _delPolicyRuleByIdQuery", *_delPolicyRuleByIdsQuery);
-        }
-
-        _delPolicyRuleWithoutIdsQuery.reset(new SqlQuery(_db));
-        if (_delPolicyRuleWithoutIdsQuery->prepare("DELETE FROM policyrules WHERE id NOT IN ( ?1 );")) {
-            return sqlFail("prepare _delPolicyRuleWithoutIdsQuery", *_delPolicyRuleWithoutIdsQuery);
-        }
-
         _delAllPolicyRulesQuery.reset(new SqlQuery(_db));
         if (_delAllPolicyRulesQuery->prepare("DELETE FROM policyrules;")) {
             return sqlFail("prepare _delAllPolicyRulesQuery", *_delAllPolicyRulesQuery);
         }
 
+        _getPolicyRuleByIdQuery.reset(new SqlQuery(_db));
+        if (_getPolicyRuleByIdQuery->prepare("SELECT id, name, days, interval, referenced "
+                                                    " FROM policyrules WHERE id=?1;")) {
+            return sqlFail("prepare _checkPolicyRuleByIdAndNameQuery", *_getPolicyRuleByIdQuery);
+        }
+
+        _getPolicyRulesReferencedByIdQuery.reset(new SqlQuery(_db));
+        if (_getPolicyRulesReferencedByIdQuery->prepare("SELECT referenced from policyrules WHERE id=?1;")) {
+            return sqlFail("prepare _getPolicyRulesReferencedByIdQuery", *_getPolicyRulesReferencedByIdQuery);
+        }
+
+        _setPolicyRuleReferencedQuery.reset(new SqlQuery(_db));
+        if (_setPolicyRuleReferencedQuery->prepare("UPDATE policyrules set referenced=?2 WHERE id=?1;")) {
+            return sqlFail("prepare _setPolicyRuleReferencedQuery", *_setPolicyRuleReferencedQuery);
+        }
 
         commitInternal(QString("checkConnect End"), false);
 
@@ -334,7 +324,8 @@ namespace OCC {
         return checkConnect();
     }
 
-    QVector<ConfigDb::PolicyInfo> ConfigDb::getPolicyInfo(){
+    QVector<ConfigDb::PolicyInfo> ConfigDb::getPolicyInfo()
+    {
         QMutexLocker locker(&_mutex);
 
         QVector<ConfigDb::PolicyInfo> res;
@@ -359,7 +350,6 @@ namespace OCC {
             res.append(info);
         }
 
-        //_getPolicyRulesQuery->finish();
         return res;
     }
 
@@ -403,66 +393,6 @@ namespace OCC {
 
     /**
      *
-     * @param ids
-     * @return
-     */
-    bool ConfigDb::delPolicyInfoByIds(const QString &ids)
-    {
-        if (ids.isEmpty()) {
-            return true;            // nothing delete, return true
-        }
-
-        QMutexLocker locker(&_mutex);
-        if (!checkConnect()) {
-            return false;
-        }
-
-        _delPolicyRuleByIdsQuery->reset_and_clear_bindings();
-        _delPolicyRuleByIdsQuery->bindValue(1, ids);
-
-        /*
-        if (!_delPolicyRuleByIdsQuery->exec()) {
-            return false;
-        }
-
-        _delPolicyRuleByIdsQuery->finish();
-        return true;
-        */
-        return _delPolicyRuleByIdsQuery->exec();
-    }
-
-    /**
-     *
-     * @param ids
-     * @return
-     */
-    bool ConfigDb::delPolicyInfoWithoutIds(const QString &ids)
-    {
-        if (ids.isEmpty()) {
-            return true;            // nothing delete, return true
-        }
-
-        QMutexLocker locker(&_mutex);
-        if (!checkConnect()) {
-            return false;
-        }
-
-        _delPolicyRuleWithoutIdsQuery->reset_and_clear_bindings();
-        _delPolicyRuleWithoutIdsQuery->bindValue(1, ids);
-
-        /*
-        if (!_delPolicyRuleWithoutIdsQuery->exec()) {
-            return false;
-        }
-
-        _delPolicyRuleWithoutIdsQuery->finish();
-        return true;
-        */
-        return _delPolicyRuleWithoutIdsQuery->exec();
-    }
-
-    /**
-     *
      * @return
      */
     bool ConfigDb::delAllPolicyInfo()
@@ -473,72 +403,96 @@ namespace OCC {
         }
         _delAllPolicyRulesQuery->reset_and_clear_bindings();
 
-        /*
-        if (!_delAllPolicyRulesQuery->exec()) {
-            return false;
-        }
-
-        _delAllPolicyRulesQuery->finish();
-        return true;
-        */
-
         return _delAllPolicyRulesQuery->exec();
     }
 
-    /**
-     *
-     * @param info
-     * @return
-     */
-    bool ConfigDb::setPolicyInfo(PolicyInfo &info)
+    bool ConfigDb::isExistPolicyRule(int id)
     {
         QMutexLocker locker(&_mutex);
+
         if (!checkConnect()) {
             return false;
         }
 
-        _setPolicyRulesQuery->reset_and_clear_bindings();
-        _setPolicyRulesQuery->bindValue(1, info._id);
-        _setPolicyRulesQuery->bindValue(2, info._name);
-        _setPolicyRulesQuery->bindValue(3, info._days);
-        _setPolicyRulesQuery->bindValue(4, info._interval);
-        _setPolicyRulesQuery->bindValue(5, info._referenced);
+        _getPolicyRuleByIdQuery->reset_and_clear_bindings();
+        _getPolicyRuleByIdQuery->bindValue(1, id);
 
-        /*
-        if (!_setPolicyRulesQuery->exec()) {
+        if (!_getPolicyRuleByIdQuery->exec()) {
             return false;
         }
 
-        _setPolicyRulesQuery->finish();
+        PolicyInfo info;
+        while (_getPolicyRulesQuery->next()) {
+            info._id = _getPolicyRulesQuery->int64Value(0);
+            info._name = _getPolicyRulesQuery->stringValue(1);
+            info._days = _getPolicyRulesQuery->baValue(2);
+            info._interval = _getPolicyRulesQuery->intValue(3);
+            info._referenced = _getPolicyRulesQuery->intValue(4);
+        }
         return true;
-        */
-        return _setPolicyRulesQuery->exec();
     }
 
-    /**
-     *
-     * @param info
-     * @return
-     */
-    bool ConfigDb::setIsReferencedField(PolicyInfo &info)
+    int ConfigDb::getPolicyRulesReferencedById(int id)
     {
         QMutexLocker locker(&_mutex);
+
+        if (!checkConnect()) {
+            return -1;
+        }
+
+        _getPolicyRulesReferencedByIdQuery->reset_and_clear_bindings();
+        _getPolicyRulesReferencedByIdQuery->bindValue(1, id);
+        if (!_getPolicyRulesReferencedByIdQuery->exec()) {
+            return -1;
+        }
+
+        int referenced = -1;
+        while (_getPolicyRulesReferencedByIdQuery->next()) {
+            referenced = _getPolicyRulesReferencedByIdQuery->intValue(0);
+        }
+        return referenced;
+    }
+
+    bool ConfigDb::updatePolicryRuleReferenced(int id, bool increase)
+    {
+
+        QMutexLocker locker(&_mutex);
+
         if (!checkConnect()) {
             return false;
         }
-        _setPolicyRulesQuery->reset_and_clear_bindings();
-        _setPolicyRulesQuery->bindValue(1, info._id);
-        _setPolicyRulesQuery->bindValue(2, info._referenced);
 
-        /*
-        if (!_setPolicyRulesQuery->exec()) {
+        _getPolicyRulesReferencedByIdQuery->reset_and_clear_bindings();
+        _getPolicyRulesReferencedByIdQuery->bindValue(1, id);
+        if (!_getPolicyRulesReferencedByIdQuery->exec()) {
             return false;
         }
 
-        _setPolicyRulesQuery->finish();
-        return true;
-        */
-        return _setPolicyRulesQuery->exec();
+        if (!_getPolicyRulesReferencedByIdQuery->next()) {
+            return false;
+        }
+
+        //int referenced = _getPolicyRulesReferencedByIdQuery->intValue(0);
+
+        int referenced = 0;
+
+        do {
+            referenced = _getPolicyRulesReferencedByIdQuery->intValue(0);
+        } while (_getPolicyRulesReferencedByIdQuery->next());
+
+        if (increase) {
+            referenced += 1;
+        } else {
+            referenced -= 1;
+        }
+
+        ASSERT(referenced >= 0);
+
+        _setPolicyRuleReferencedQuery->reset_and_clear_bindings();
+        _setPolicyRuleReferencedQuery->bindValue(1, id);
+        _setPolicyRuleReferencedQuery->bindValue(2, referenced);
+
+        return _setPolicyRuleReferencedQuery->exec();
     }
 
 }

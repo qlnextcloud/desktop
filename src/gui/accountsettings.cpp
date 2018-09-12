@@ -274,7 +274,6 @@ void AccountSettings::slotForceSyncSubFolder()
         }
     }
 
-
     Folder *f = subInfo->_folder;
 
     // 在这里备份/更新信息，再Finish恢复信息
@@ -297,7 +296,12 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
         QMenu *menu = new QMenu(tv);
         menu->setAttribute(Qt::WA_DeleteOnClose);
 
-        QAction *ac = menu->addAction(tr("Open folder"));
+        // ----isshe----: 先放到根目录，之后移动到子目录!!!!
+        QAction *ac = menu->addAction(tr("Set Sync Rule"));
+        connect(ac, &QAction::triggered, this, &AccountSettings::slotSetSyncRule);
+
+        //QAction *ac = menu->addAction(tr("Open folder"));
+        ac = menu->addAction(tr("Open folder"));
         connect(ac, &QAction::triggered, this, &AccountSettings::slotOpenCurrentLocalSubFolder);
 
         QString fileName = _model->data(index, FolderStatusDelegate::FolderPathRole).toString();
@@ -504,6 +508,28 @@ void AccountSettings::slotOpenCurrentFolder()
     if (!alias.isEmpty()) {
         emit openFolderAlias(alias);
     }
+}
+
+void AccountSettings::slotSetSyncRule()
+{
+    QModelIndex selected = ui->_folderList->selectionModel()->currentIndex();
+    if (!selected.isValid() || _model->classify(selected) != FolderStatusModel::SubFolder) {
+        return;
+    }
+    FolderStatusModel::SubFolderInfo *subInfo = _model->infoForIndex(selected);
+
+    Folder * folder = subInfo->_folder;
+    SyncRuleEditor *syncRuleEditor = new SyncRuleEditor(folder->journalDb(), subInfo, this);
+
+    if (syncRuleEditor->exec() != QDialog::Accepted) {
+        delete(syncRuleEditor);
+        return;
+    }
+
+    // 添加/修改--> 怎么区分添加和修改？
+    syncRuleEditor->setSyncRule(subInfo);
+
+    delete(syncRuleEditor);
 }
 
 void AccountSettings::slotOpenCurrentLocalSubFolder()

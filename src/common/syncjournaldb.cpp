@@ -455,6 +455,21 @@ bool SyncJournalDb::checkConnect()
         return sqlFail("Create table version", createQuery);
     }
 
+    //----isshe----
+    // isforcesync = 1: 表示是立即同步，不对此目录进行同步规则限制
+    createQuery.prepare("CREATE TABLE IF NOT EXISTS syncrules("
+                        "path VARCHAR(4096),"
+                        "inode INTEGER,"
+                        "policyruleid INTEGER,"
+                        "lastsynctime INTEGER(8),"
+                        "forcesync INTEGER default 0,"
+                        "enabled INTEGER default 1,"
+                        "PRIMARY KEY(path)"
+                        ");");
+    if (!createQuery.exec()) {
+        return sqlFail("Create table syncrules", createQuery);
+    }
+
     bool forceRemoteDiscovery = false;
 
     SqlQuery versionQuery("SELECT major, minor, patch FROM version;", _db);
@@ -677,6 +692,29 @@ bool SyncJournalDb::checkConnect()
         return sqlFail("prepare _setDataFingerprintQuery2", *_setDataFingerprintQuery2);
     }
 
+    // ----isshe----
+    _getSyncRulesQuery.reset(new SqlQuery(_db));
+    if (_getSyncRulesQuery->prepare("SELECT * FROM syncrules;")) {
+        return sqlFail("prepare _getSyncRulesQuery", *_getSyncRulesQuery);
+    }
+
+    _setSyncRulesQuery.reset(new SqlQuery(_db));
+    if (_setSyncRulesQuery->prepare("INSERT OR REPLACE INTO syncrules "
+                                          "(path, inode, policyruleid, lastsynctime, forcesync, enabled) "
+                                          "VALUES (?1, ?2, ?3, ?4, ?5, ?6);")) {
+        return sqlFail("prepare _setSyncRulesQuery", *_setSyncRulesQuery);
+    }
+
+    _delSyncRuleByPathQuery.reset(new SqlQuery(_db));
+    if (_delSyncRuleByPathQuery->prepare("DELETE FROM syncrules WHERE path=?1;")) {
+        return sqlFail("prepare _delSyncRuleByPathQuery", *_delSyncRuleByPathQuery);
+    }
+
+    _getSyncRuleByPathQuery.reset(new SqlQuery(_db));
+    if (_getSyncRuleByPathQuery->prepare("SELECT * FROM syncrules WHERE path=?1;")) {
+        return sqlFail("prepare _getSyncRuleByPathQuery", *_getSyncRuleByPathQuery);
+    }
+
     // don't start a new transaction now
     commitInternal(QString("checkConnect End"), false);
 
@@ -724,6 +762,13 @@ void SyncJournalDb::close()
     _getDataFingerprintQuery.reset(0);
     _setDataFingerprintQuery1.reset(0);
     _setDataFingerprintQuery2.reset(0);
+
+    //----isshe----
+    _getSyncRulesQuery.reset(nullptr);
+    _addSyncRulesQuery.reset(nullptr);
+    _delSyncRuleByPathQuery.reset(nullptr);
+    _setSyncRulesQuery.reset(nullptr);
+    _getSyncRuleByPathQuery.reset(nullptr);
 
     _db.close();
     _avoidReadFromDbOnNextSyncFilter.clear();
@@ -1980,5 +2025,122 @@ bool operator==(const SyncJournalDb::UploadInfo &lhs,
         && lhs._size == rhs._size
         && lhs._transferid == rhs._transferid;
 }
+
+
+QVector<SyncJournalDb::SyncRuleInfo> SyncJournalDb::getSyncRulesInfo(){
+    QMutexLocker locker(&_mutex);
+
+    QVector<SyncJournalDb::SyncRuleInfo> res;
+
+    if (!checkConnect()) {
+        return res;
+    }
+
+    _getSyncRulesQuery->reset_and_clear_bindings();
+
+    if (!_getSyncRulesQuery->exec()) {
+        return res;
+    }
+
+    while (_getSyncRulesQuery->next()) {
+        SyncRuleInfo info;
+        info._path = _getSyncRulesQuery->stringValue(0);
+        info._inode = _getSyncRulesQuery->intValue(1);
+        info._policyruleid = _getSyncRulesQuery->intValue(2);
+        info._lastsynctime = _getSyncRulesQuery->int64Value(3);
+        info._forcesync = _getSyncRulesQuery->intValue(4);
+        info._enabled = _getSyncRulesQuery->intValue(5);
+        res.append(info);
+    }
+
+    return res;
+}
+
+bool SyncJournalDb::addSyncRulesInfo(SyncRuleInfo &info)
+{
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    _addSyncRulesQuery->reset_and_clear_bindings();
+
+    _addSyncRulesQuery->bindValue(1, info._path);
+    _addSyncRulesQuery->bindValue(2, info._inode);
+    _addSyncRulesQuery->bindValue(3, info._policyruleid);
+    _addSyncRulesQuery->bindValue(4, info._lastsynctime);
+    _addSyncRulesQuery->bindValue(5, info._forcesync);
+    _addSyncRulesQuery->bindValue(6, info._enabled);
+
+    return _addSyncRulesQuery->exec();
+}
+
+bool SyncJournalDb::setSyncRulesInfo(SyncRuleInfo &info)
+{
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    _setSyncRulesQuery->reset_and_clear_bindings();
+    _setSyncRulesQuery->bindValue(1, info._path);
+    _setSyncRulesQuery->bindValue(2, info._inode);
+    _setSyncRulesQuery->bindValue(3, info._policyruleid);
+    _setSyncRulesQuery->bindValue(4, info._lastsynctime);
+    _setSyncRulesQuery->bindValue(5, info._forcesync);
+    _setSyncRulesQuery->bindValue(6, info._enabled);
+
+    return _setSyncRulesQuery->exec();
+}
+
+bool SyncJournalDb::delSyncRuleByPath(QString &path)
+{
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    _delSyncRuleByPathQuery->reset_and_clear_bindings();
+    _delSyncRuleByPathQuery->bindValue(1, path);
+    return _delSyncRuleByPathQuery->exec();
+}
+
+int SyncJournalDb::getSyncRuleByPath(QString &path, SyncRuleInfo *info)
+{
+    QMutexLocker locker(&_mutex);
+
+    if (!info || !checkConnect()) {
+        return -1;
+    }
+
+    _getSyncRuleByPathQuery->reset_and_clear_bindings();
+    _getSyncRuleByPathQuery->bindValue(1, path);
+
+    if (!_getSyncRuleByPathQuery->exec()) {
+        return -1;
+    }
+
+    if (!_getSyncRuleByPathQuery->next()) {
+        return 0;
+    }
+
+    do
+    {
+        info->_path = _getSyncRuleByPathQuery->stringValue(0);
+        info->_inode = _getSyncRuleByPathQuery->intValue(1);
+        info->_policyruleid = _getSyncRuleByPathQuery->intValue(2);
+        info->_lastsynctime = _getSyncRuleByPathQuery->int64Value(3);
+        info->_forcesync = _getSyncRuleByPathQuery->intValue(4);
+        info->_enabled = _getSyncRuleByPathQuery->intValue(5);
+    } while (_getSyncRuleByPathQuery->next());
+
+    return 1;
+}
+
+
+
 
 } // namespace OCC

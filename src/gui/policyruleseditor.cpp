@@ -105,33 +105,6 @@ namespace OCC {
         //addPattern(QString("isshe"), false, 10);
     }
 
-    void PolicyRulesEditor::slotStateChanged(int state)
-    {
-        int curRow = ui->policyRulesTableWidget->currentRow();
-        QComboBox *combox = (QComboBox *)ui->policyRulesTableWidget->cellWidget(curRow, daysCol);
-        QListWidget *pListWidget = (QListWidget *)combox->view();
-
-        QString selectedDaysStr("");
-        for (int i = 0; i < pListWidget->count(); i++) {
-            QListWidgetItem *pItem = pListWidget->item(i);
-            QWidget *pWidget = pListWidget->itemWidget(pItem);
-            QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-            if (pCheckBox->isChecked()) {
-                selectedDaysStr.append(pCheckBox->text() + ";");
-            }
-        }
-
-        if (selectedDaysStr.endsWith(";")) {
-            selectedDaysStr.remove(selectedDaysStr.count() - 1, 1);
-        }
-
-        if (!selectedDaysStr.isEmpty()) {
-            combox->setEditText(selectedDaysStr);
-        } else {
-            combox->setEditText("");
-        }
-    }
-
     QString PolicyRulesEditor::getDayNames(const QString &Days)
     {
         QString res;

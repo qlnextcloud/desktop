@@ -121,6 +121,23 @@ public:
         qint64 _modtime;
     };
 
+    // ----isshe----
+    struct SyncRuleInfo
+    {
+        QString _path;
+        int _inode;
+        int _policyruleid;
+        qint64 _lastsynctime;
+        int _forcesync;
+        int _enabled;
+    };
+
+    QVector<SyncRuleInfo> getSyncRulesInfo();
+    bool addSyncRulesInfo(SyncJournalDb::SyncRuleInfo &info);
+    bool setSyncRulesInfo(SyncRuleInfo &info);
+    bool delSyncRuleByPath(QString &path);
+    int getSyncRuleByPath(QString &path, SyncRuleInfo *info);
+
     DownloadInfo getDownloadInfo(const QString &file);
     void setDownloadInfo(const QString &file, const DownloadInfo &i);
     QVector<DownloadInfo> getAndDeleteStaleDownloadInfos(const QSet<QString> &keep);
@@ -264,6 +281,14 @@ private:
     QScopedPointer<SqlQuery> _getDataFingerprintQuery;
     QScopedPointer<SqlQuery> _setDataFingerprintQuery1;
     QScopedPointer<SqlQuery> _setDataFingerprintQuery2;
+
+    //----isshe----
+    QScopedPointer<SqlQuery> _getSyncRulesQuery;
+    QScopedPointer<SqlQuery> _addSyncRulesQuery;
+    QScopedPointer<SqlQuery> _delSyncRuleByPathQuery;
+    QScopedPointer<SqlQuery> _setSyncRulesQuery;
+    QScopedPointer<SqlQuery> _getSyncRuleByPathQuery;
+
 
     /* This is the list of paths we called avoidReadFromDbOnNextSync on.
      * It means that they should not be written to the DB in any case since doing

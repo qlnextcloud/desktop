@@ -19,7 +19,7 @@ namespace OCC {
 
     Q_OBJECT
     public:
-        explicit ConfigDb(const QString &dbFilePath, QObject *parent = 0);
+        explicit ConfigDb(const QString &dbFilePath, QObject *parent = nullptr);
         virtual ~ConfigDb();
         void close();
 
@@ -47,31 +47,25 @@ namespace OCC {
 
         QVector<PolicyInfo> getPolicyInfo();
         bool addPolicyInfo(PolicyInfo &info);
-        bool delPolicyInfoByIds(const QString &ids);
-        bool delPolicyInfoWithoutIds(const QString &ids);
         bool delAllPolicyInfo();
-        bool setPolicyInfo(PolicyInfo &info);
-        bool setIsReferencedField(PolicyInfo &info);
-
+        bool isExistPolicyRule(int id);
+        int getPolicyRulesReferencedById(int id);
+        bool updatePolicryRuleReferenced(int id, bool increase);
 
     private:
         SqlDatabase _db;
         QString _dbFile;
         QMutex _mutex; // Public functions are protected with the mutex.
         int _transaction;
-        //bool _metadataTableIsEmpty;
 
         //----isshe-----
         QScopedPointer<SqlQuery> _getPolicyRulesQuery;
         QScopedPointer<SqlQuery> _addPolicyRulesQuery;
         QScopedPointer<SqlQuery> _addPolicyRulesWithIdQuery;
-        QScopedPointer<SqlQuery> _delPolicyRuleByIdsQuery;
-        QScopedPointer<SqlQuery> _delPolicyRuleWithoutIdsQuery;
         QScopedPointer<SqlQuery> _delAllPolicyRulesQuery;
-        QScopedPointer<SqlQuery> _setPolicyRulesQuery;
-        QScopedPointer<SqlQuery> _setPolicyRulesIsReferencedQuery;
-
-
+        QScopedPointer<SqlQuery> _getPolicyRuleByIdQuery;
+        QScopedPointer<SqlQuery> _getPolicyRulesReferencedByIdQuery;
+        QScopedPointer<SqlQuery> _setPolicyRuleReferencedQuery;
     };
 
 }
