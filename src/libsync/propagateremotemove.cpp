@@ -174,6 +174,13 @@ void PropagateRemoteMove::finalize()
     // to the new record. It is not a problem to skip it here.
     propagator()->_journal->deleteFileRecord(_item->_originalFile);
 
+    // ----isshe----delete sync rule
+    // if (isDir && path == name)
+    qDebug() << "----isshe---: delSyncRuleByPath: file = " << _item->_originalFile;
+    if (_item->isFirstSubFolder()) {
+        propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+    }
+
     SyncJournalFileRecord record = _item->toSyncJournalFileRecordWithInode(propagator()->getFilePath(_item->_renameTarget));
     record._path = _item->_renameTarget.toUtf8();
     if (oldRecord.isValid()) {
@@ -195,6 +202,16 @@ void PropagateRemoteMove::finalize()
         if (!adjustSelectiveSync(propagator()->_journal, _item->_file, _item->_renameTarget)) {
             done(SyncFileItem::FatalError, tr("Error writing metadata to the database"));
             return;
+        }
+
+        // ----isshe----add sync rule
+        // if (isDir && path == name)
+        qDebug() << "---isshe----: _item._type == " << _item->_type << ", _item->_file = " << _item->_file;
+        if (_item->isFirstSubFolder()){
+            qDebug() << "---isshe----: setSyncRulesInfo--------";
+            SyncJournalDb::SyncRuleInfo info;
+            propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+            propagator()->_journal->setSyncRulesInfo(info, true);
         }
     }
 

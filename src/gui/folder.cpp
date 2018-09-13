@@ -31,6 +31,7 @@
 #include "theme.h"
 #include "filesystem.h"
 #include "excludedfiles.h"
+#include "polirysimgleeditor.h"
 
 #include "creds/abstractcredentials.h"
 
@@ -41,6 +42,11 @@
 
 #include <QMessageBox>
 #include <QPushButton>
+
+#define NEEDSCHEDULE 1
+#define NONEEDSCHEDULE 0
+#define NEEDSYNC 1
+#define NONEEDSYNC 0
 
 namespace OCC {
 
@@ -57,13 +63,16 @@ Folder::Folder(const FolderDefinition &definition,
     , _lastSyncDuration(0)
     , _consecutiveFailingSyncs(0)
     , _consecutiveFollowUpSyncs(0)
-    , _journal(_definition.absoluteJournalPath())
+    , _journal(_definition.absoluteJournalPath())           // 这里为什么会调用OCC::SyncJournalDb的构造函数？
     , _fileLog(new SyncRunFileLog)
     , _saveBackwardsCompatible(false)
     , _enabledforceSyncSubFolder(false)
 {
     _timeSinceLastSyncStart.start();
     _timeSinceLastSyncDone.start();
+
+    ConfigFile cfg;
+    _pGlobalConfigDb = cfg.getGlobalConfigDb();
 
     SyncResult::Status status = SyncResult::NotYetStarted;
     if (definition.paused) {
@@ -299,14 +308,85 @@ void Folder::slotRunEtagJob()
     // The _requestEtagJob is auto deleting itself on finish. Our guard pointer _requestEtagJob will then be null.
 }
 
+bool Folder::isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
+                       ConfigDb::PolicyInfo *policyRuleInfo, QDateTime &currentDateTime)
+{
+    // 检查星期
+    int day = currentDateTime.date().dayOfWeek();
+    qDebug() << "-----isshe----: day = " << day << ", _days.at(day) = " << policyRuleInfo->_days.at(day);
+    if (!PolirySimgleEditor::isDay(policyRuleInfo->_days, day)) {
+        return false;
+    }
+
+    // 检查时间
+    time_t now = Utility::qDateTimeToTime_t(currentDateTime);
+    /*
+    if (now < syncRuleInfo->_lastsynctime + policyRuleInfo->_interval){     // interval: seconds
+        return false;
+    }
+
+    return true;
+    */
+    qDebug() << "-----isshe----: now = " << now << ", _lastsynctime = " << syncRuleInfo->_lastsynctime << ", _interval = " << policyRuleInfo->_interval;
+    return now >= syncRuleInfo->_lastsynctime + policyRuleInfo->_interval;
+}
+
+void Folder::setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos,
+                                    QDateTime &currentDateTime)
+{
+    QVector<ConfigDb::PolicyInfo> policyRuleInfos = _pGlobalConfigDb->getPolicyInfo();
+    QMap<int, ConfigDb::PolicyInfo *> map;
+
+    QVector<ConfigDb::PolicyInfo>::iterator policyIter;
+    for (policyIter = policyRuleInfos.begin(); policyIter != policyRuleInfos.end(); policyIter++) {
+        map[policyIter->_id] = policyIter;
+    }
+
+    QVector<SyncJournalDb::SyncRuleInfo>::iterator syncIter;
+    for (syncIter = syncRuleinfos.begin(); syncIter != syncRuleinfos.end(); syncIter++) {
+        if (isTimeout(syncIter, map[syncIter->_policyruleid], currentDateTime)) {
+            _currentSyncSubPath.append(syncIter->_path);
+        } else {
+            _currentNoSyncSubPath.append(syncIter->_path);
+        }
+    }
+
+}
+
 void Folder::etagRetreived(const QString &etag)
 {
     // re-enable sync if it was disabled because network was down
     FolderMan::instance()->setSyncEnabled(true);
+    QDateTime currentDateTime = QDateTime::currentDateTimeUtc();
+    time_t now = Utility::qDateTimeToTime_t(currentDateTime);
+    _currentSyncSubPath.clear();
+    _currentNoSyncSubPath.clear();
 
     if (_lastEtag != etag) {
+
         qCInfo(lcFolder) << "Compare etag with previous etag: last:" << _lastEtag << ", received:" << etag << "-> CHANGED";
         _lastEtag = etag;
+        //slotScheduleThisFolder();
+
+        QVector<SyncJournalDb::SyncRuleInfo> syncInfos = _journal.getSyncRulesInfo();
+        setSyncOperationVector(syncInfos, currentDateTime);
+
+        // 如果没有超时，这次不同步needsync = false，needschedule = true, 不更新时间戳
+        // 如果超时，立即同步needsync = true, needschedule = false，更新时间戳 (代码外面一层)
+        if (_currentNoSyncSubPath.count() > 0) {
+            _journal.setNeedSyncAndScheduleByPaths(NEEDSCHEDULE, NONEEDSYNC,
+                                                   _currentNoSyncSubPath, (int)now, false);
+        }
+    } else {
+        // 获取所有需要调度的
+        QVector<SyncJournalDb::SyncRuleInfo> syncInfos = _journal.getSyncRulesByNeedSchedule(NEEDSCHEDULE);
+        setSyncOperationVector(syncInfos, currentDateTime);
+        // 计算已经超时的，放到同步列表中；不用管没有超时的
+    }
+
+    if (_currentSyncSubPath.count() > 0) {
+        _journal.setNeedSyncAndScheduleByPaths(NONEEDSCHEDULE, NEEDSYNC,
+                                               _currentSyncSubPath, (int)now, true);
         slotScheduleThisFolder();
     }
 
@@ -821,6 +901,7 @@ void Folder::slotSyncFinished(bool success)
         // Maybe the sync was terminated because the user paused the folder
         _syncResult.setStatus(SyncResult::Paused);
     } else {
+        // 这里把needSync状态改了
         _syncResult.setStatus(SyncResult::Success);
     }
 

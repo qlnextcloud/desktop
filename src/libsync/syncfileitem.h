@@ -177,6 +177,11 @@ public:
         return _type == SyncFileItem::Directory;
     }
 
+    bool isFirstSubFolder() const
+    {
+        return isDirectory() && !_file.contains('/');
+    }
+
     /**
      * True if the item had any kind of error.
      */

@@ -13,6 +13,10 @@
 
 #include "common/ownsql.h"
 
+#define DEFAULT_POLICY_RULE_ID 1
+#define DEFAULT_POLICY_RULE_DAYS "1111111"
+#define DEFAULT_POLICY_RULE_INTERVAL 60         // seconds
+
 namespace OCC {
 
     class OCSYNC_EXPORT ConfigDb : public QObject {
@@ -44,6 +48,10 @@ namespace OCC {
             int _interval;
             int _referenced;
         };
+        bool insertDefaultPolicyRules();
+        bool insertDefaultInfo();
+
+
 
         QVector<PolicyInfo> getPolicyInfo();
         bool addPolicyInfo(PolicyInfo &info);

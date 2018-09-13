@@ -518,7 +518,7 @@ void OwncloudPropagator::start(const SyncFileItemVector &items)
                 directoriesToRemove.prepend(createJob(item));
                 removedDirectory = item->_file + "/";
             } else {
-                //qDebug() << "----isshe-----: item->_file " << item->_file << ", priority_flag = " << item->_priority_flag;
+                qDebug() << "----isshe-----: item->_file " << item->_file << ", priority_flag = " << item->_priority_flag;
                 if (item->_priority_flag == CSYNC_FILE_PRIORITY) {
                     directories.top().second->prependTask(item);
                 } else {
@@ -940,6 +940,12 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
                 && _item->_originalFile != _item->_renameTarget) {
                 // Remove the stale entries from the database.
                 propagator()->_journal->deleteFileRecord(_item->_originalFile, true);
+                // ----isshe----delete sync rule
+                // if (isDir && path == name)
+                qDebug() << "----isshe---: delSyncRuleByPath: file = " << _item->_originalFile;
+                if (_item->isFirstSubFolder()) {
+                    propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+                }
             }
 
             _item->_file = _item->_renameTarget;
@@ -963,6 +969,15 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
                 status = _item->_status = SyncFileItem::FatalError;
                 _item->_errorString = tr("Error writing metadata to the database");
                 qCWarning(lcDirectory) << "Error writing to the database for file" << _item->_file;
+            }
+            // ----isshe----add sync rule
+            // if (isDir && path == name)
+            qDebug() << "---isshe----: _item->_type == " << _item->_type << ", _item->_file = " << _item->_file;
+            if (_item->isFirstSubFolder()){
+                qDebug() << "---isshe----: setSyncRulesInfo--------";
+                SyncJournalDb::SyncRuleInfo info;
+                propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+                propagator()->_journal->setSyncRulesInfo(info, true);
             }
         }
     }
@@ -1013,6 +1028,16 @@ void CleanupPollsJob::slotPollFinished()
             emit aborted(job->_item->_errorString);
             deleteLater();
             return;
+        }
+
+        // ----isshe----add sync rule
+        // if (isDir && path == name)
+        qDebug() << "---isshe----: _item->_type == " << job->_item->_type << ", _item->_file = " << job->_item->_file;
+        if (job->_item->isFirstSubFolder()){
+            qDebug() << "---isshe----: setSyncRulesInfo--------";
+            SyncJournalDb::SyncRuleInfo info;
+            _journal->initSyncRuleInfo(info, job->_item->_file);
+            _journal->setSyncRulesInfo(info, true);
         }
     }
     // Continue with the next entry, or finish

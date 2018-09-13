@@ -26,10 +26,14 @@ namespace OCC {
         QString getDays();
         void setDays(const QString &days);
         QString getDayState(Qt::CheckState state);
+        static QString getSecondUnit();
         static QString getMinuteUnit();
         static QString getHourUnit();
+        static QString formatIntervalSecond(int interval);
         static QString formatIntervalMinute(int interval);
         static QString formatIntervalHour(int interval);
+        static bool isDay(const QString &days, int i);
+
 
     private:
         Ui::PolirySimgleEditor *ui;

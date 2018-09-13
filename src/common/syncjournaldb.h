@@ -28,6 +28,7 @@
 #include "common/utility.h"
 #include "common/ownsql.h"
 #include "common/syncjournalfilerecord.h"
+#include "configdb.h"
 
 namespace OCC {
 class SyncJournalFileRecord;
@@ -130,13 +131,21 @@ public:
         qint64 _lastsynctime;
         int _forcesync;
         int _enabled;
+        int _needschedule;
+        int _needsync;
     };
 
+    void initSyncRuleInfo(SyncRuleInfo &info, QString &path, int policyRuleId = DEFAULT_POLICY_RULE_ID);
     QVector<SyncRuleInfo> getSyncRulesInfo();
-    bool addSyncRulesInfo(SyncJournalDb::SyncRuleInfo &info);
-    bool setSyncRulesInfo(SyncRuleInfo &info);
+    bool setSyncRulesInfo(SyncRuleInfo &info, bool ignore = false);
     bool delSyncRuleByPath(QString &path);
     int getSyncRuleByPath(QString &path, SyncRuleInfo *info);
+    void fillSyncRuleInfo(SyncJournalDb::SyncRuleInfo &info, QScopedPointer<SqlQuery> &query);
+    void fillSyncRuleInfo(SyncJournalDb::SyncRuleInfo *info, QScopedPointer<SqlQuery> &query);
+    //bool doSetNeedSyncAndScheduleByPaths(int needSchedule, int needSync, QString &pathStr, int now, bool useNow);
+    bool setNeedSyncAndScheduleByPaths(int needSchedule, int needSync, QVector<QString> &paths, int now, bool updateTimeStamp);
+    QVector<SyncJournalDb::SyncRuleInfo> getSyncRulesByNeedSchedule(int needSchedule);
+
 
     DownloadInfo getDownloadInfo(const QString &file);
     void setDownloadInfo(const QString &file, const DownloadInfo &i);
@@ -284,10 +293,13 @@ private:
 
     //----isshe----
     QScopedPointer<SqlQuery> _getSyncRulesQuery;
-    QScopedPointer<SqlQuery> _addSyncRulesQuery;
     QScopedPointer<SqlQuery> _delSyncRuleByPathQuery;
     QScopedPointer<SqlQuery> _setSyncRulesQuery;
     QScopedPointer<SqlQuery> _getSyncRuleByPathQuery;
+    QScopedPointer<SqlQuery> _setOrIgnoreSyncRulesQuery;
+    QScopedPointer<SqlQuery> _setNeedSyncAndScheduleByPathsQuery;
+    QScopedPointer<SqlQuery> _getSyncRulesByNeedScheduleQuery;
+
 
 
     /* This is the list of paths we called avoidReadFromDbOnNextSync on.

@@ -295,10 +295,17 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
     if (_model->classify(index) == FolderStatusModel::SubFolder) {
         QMenu *menu = new QMenu(tv);
         menu->setAttribute(Qt::WA_DeleteOnClose);
+        FolderStatusModel::SubFolderInfo *subInfo = _model->infoForIndex(index);
+        QAction *ac = nullptr;
 
         // ----isshe----: 先放到根目录，之后移动到子目录!!!!
-        QAction *ac = menu->addAction(tr("Set Sync Rule"));
-        connect(ac, &QAction::triggered, this, &AccountSettings::slotSetSyncRule);
+        QString subPath = subInfo->_path;
+        QString subName = subInfo->_name;
+        subPath.chop(1);
+        if (subPath == subName) {           // 是一级子目录
+            ac = menu->addAction(tr("Set Sync Rule"));
+            connect(ac, &QAction::triggered, this, &AccountSettings::slotSetSyncRule);
+        }
 
         //QAction *ac = menu->addAction(tr("Open folder"));
         ac = menu->addAction(tr("Open folder"));
@@ -309,7 +316,6 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
             ac->setEnabled(false);
         }
 
-        FolderStatusModel::SubFolderInfo *subInfo = _model->infoForIndex(index);
         Folder *subFolderParent = subInfo->_folder;
         if (!subFolderParent->syncPaused()) {
             ac = menu->addAction(tr("Force sync now"));

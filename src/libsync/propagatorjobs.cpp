@@ -80,8 +80,12 @@ bool PropagateLocalRemove::removeRecursively(const QString &path)
         if (success && !ok) {
             // We need to delete the entries from the database now from the deleted vector
             foreach (const auto &it, deleted) {
-                propagator()->_journal->deleteFileRecord(_item->_originalFile + path + QLatin1Char('/') + it.first,
-                    it.second);
+                propagator()->_journal->deleteFileRecord(_item->_originalFile + path + QLatin1Char('/') + it.first, it.second);
+                // ----isshe----delete sync rule
+                // if (isDir && path == name)
+                //if (_item->isFirstSubFolder()) {
+                //    propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+                //}
             }
             success = false;
             deleted.clear();
@@ -91,8 +95,12 @@ bool PropagateLocalRemove::removeRecursively(const QString &path)
         }
         if (!success && ok) {
             // This succeeded, so we need to delete it from the database now because the caller won't
-            propagator()->_journal->deleteFileRecord(_item->_originalFile + path + QLatin1Char('/') + di.fileName(),
-                isDir);
+            propagator()->_journal->deleteFileRecord(_item->_originalFile + path + QLatin1Char('/') + di.fileName(), isDir);
+            // ----isshe----delete sync rule
+            // if (isDir && path == name)
+            //if (_item->isFirstSubFolder()) {
+            //    propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+            //}
         }
     }
     if (success) {
@@ -136,6 +144,13 @@ void PropagateLocalRemove::start()
     }
     propagator()->reportProgress(*_item, 0);
     propagator()->_journal->deleteFileRecord(_item->_originalFile, _item->isDirectory());
+    // ----isshe----delete sync rule
+    // if (isDir && path == name)
+    qDebug() << "----isshe---: delSyncRuleByPath: file = " << _item->_originalFile;
+    if (_item->isFirstSubFolder()) {
+        propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+    }
+
     propagator()->_journal->commit("Local remove");
     done(SyncFileItem::Success);
 }
@@ -184,6 +199,17 @@ void PropagateLocalMkdir::start()
         done(SyncFileItem::FatalError, tr("Error writing metadata to the database"));
         return;
     }
+
+    // ----isshe----add sync rule
+    // if (isDir && path == name)
+    qDebug() << "---isshe----: _item->_type == " << _item->_type << ", _item-> = " << _item->_file;
+    if (_item->isFirstSubFolder()){
+        qDebug() << "---isshe----: setSyncRulesInfo--------";
+        SyncJournalDb::SyncRuleInfo info;
+        propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+        propagator()->_journal->setSyncRulesInfo(info, true);
+    }
+
     propagator()->_journal->commit("localMkdir");
 
     done(SyncFileItem::Success);
@@ -235,6 +261,13 @@ void PropagateLocalRename::start()
     propagator()->_journal->getFileRecord(_item->_originalFile, &oldRecord);
     propagator()->_journal->deleteFileRecord(_item->_originalFile);
 
+    // ----isshe----delete sync rule
+    // if (isDir && path == name)
+    qDebug() << "----isshe---: delSyncRuleByPath: file = " << _item->_originalFile;
+    if (_item->isFirstSubFolder()) {
+        propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+    }
+
     // store the rename file name in the item.
     const auto oldFile = _item->_file;
     _item->_file = _item->_renameTarget;
@@ -255,6 +288,16 @@ void PropagateLocalRename::start()
             done(SyncFileItem::FatalError, tr("Error writing metadata to the database"));
             return;
         }
+        // ----isshe----add sync rule
+        // if (isDir && path == name)
+        qDebug() << "---isshe----: _item._type == " << _item->_type << ", _item->_file = " << _item->_file;
+        if (_item->isFirstSubFolder()){
+            qDebug() << "---isshe----: setSyncRulesInfo--------";
+            SyncJournalDb::SyncRuleInfo info;
+            propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+            propagator()->_journal->setSyncRulesInfo(info, true);
+        }
+
     }
 
     propagator()->_journal->commit("localRename");

@@ -623,6 +623,16 @@ void PropagateUploadFileCommon::finalize()
         return;
     }
 
+    // ----isshe----add sync rule
+    // if (isDir && path == name)
+    qDebug() << "---isshe----: _item._type == " << _item->_type << ", _item->_file = " << _item->_file;
+    if (_item->isFirstSubFolder()){
+        qDebug() << "---isshe----: setSyncRulesInfo--------";
+        SyncJournalDb::SyncRuleInfo info;
+        propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+        propagator()->_journal->setSyncRulesInfo(info, true);
+    }
+
     // Remove from the progress database:
     propagator()->_journal->setUploadInfo(_item->_file, SyncJournalDb::UploadInfo());
     propagator()->_journal->commit("upload file start");

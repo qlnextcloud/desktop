@@ -38,6 +38,7 @@
 
 #define DEFAULT_REMOTE_POLL_INTERVAL 30000 // default remote poll time in milliseconds
 #define DEFAULT_MAX_LOG_LINES 20000
+#define DEFAULT_SYNCRULE_INTERVAL 30000
 
 namespace OCC {
 
@@ -94,15 +95,19 @@ ConfigFile::ConfigFile()
 
     const QString config = configFile();
 
-
     QSettings settings(config, QSettings::IniFormat);
     settings.beginGroup(defaultConnection());
 
     if (_globalConfigDbFile.isEmpty()) {
         _globalConfigDbFile = ConfigDb::makeDbName(configPath());
     }
-    _pconfigDb = new ConfigDb(absoluteConfigDbPath());
 
+    if (!_pconfigDb) {
+        _pconfigDb = new ConfigDb(absoluteConfigDbPath());
+        if (_pconfigDb){
+            _pconfigDb->isConnected();
+        }
+    }
 }
 
 bool ConfigFile::setConfDir(const QString &value)
@@ -378,6 +383,11 @@ int ConfigFile::remotePollInterval(const QString &connection) const
         remoteInterval = DEFAULT_REMOTE_POLL_INTERVAL;
     }
     return remoteInterval;
+}
+
+int ConfigFile::syncRuleInterval() const
+{
+    return DEFAULT_SYNCRULE_INTERVAL;
 }
 
 void ConfigFile::setRemotePollInterval(int interval, const QString &connection)
@@ -776,7 +786,8 @@ QString ConfigFile::absoluteConfigDbPath() const
     return QDir(_confDir).filePath(_globalConfigDbFile);
 }
 
-ConfigDb * ConfigFile::getGlobalConfigDb() const {
+ConfigDb * ConfigFile::getGlobalConfigDb() const
+{
     return _pconfigDb;
 }
 

@@ -139,6 +139,9 @@ namespace OCC {
         newSyncInfo._policyruleid = policyRuleId;
         newSyncInfo._lastsynctime = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());
         newSyncInfo._forcesync = 0;                // Not ForceSync
+        newSyncInfo._needschedule = 0;
+        newSyncInfo._needsync = 0;
+        newSyncInfo._enabled = 1;
         if (!_pjournalDb->setSyncRulesInfo(newSyncInfo)) {
             QMessageBox::warning(this, tr("Error"), tr("Set Sync Rule Failed."));
             return;

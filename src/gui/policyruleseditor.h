@@ -21,7 +21,6 @@ namespace OCC {
         int addPattern(const QString &id, const QString &name,
                        const QString &days, const QString &interval, int Referenced = 0);
         int addPattern(const QString &name, bool days, int interval);
-        QString getDayNames(const QString &Days);
         int parseInterval(QString& intervalStr);
         void setPattern(const int row, const QString &name,
                                            const QString &days, const QString &interval);
@@ -29,8 +28,10 @@ namespace OCC {
         bool addPolicyRules(QVector<ConfigDb::PolicyInfo> &infos);
         void showPolicyRules();
         QString convertInterval(int interval);
+        QString getDayNames(const QString &Days);
+        void prepareWeek();
 
-            private slots:
+    private slots:
         void slotAddPattern();
         void slotUpdatePolicyRules();
         void slotRemoveCurrentItem();
@@ -41,6 +42,8 @@ namespace OCC {
     private:
         Ui::PolicyRulesEditor *ui;
         ConfigDb *_pconfigDb;
+        QVector<QString> _week;
+
     };
 
 } // namespace OCC

@@ -867,6 +867,12 @@ void PropagateDownloadFile::downloadFinished()
         if (isConflict) {
             propagator()->_journal->deleteFileRecord(fn);
             propagator()->_journal->commit("download finished");
+            // ----isshe----delete sync rule
+            // if (isDir && path == name)
+            qDebug() << "----isshe---: delSyncRuleByPath: file = " << fn;
+            if (_item->isDirectory() && !fn.contains('/')) {
+                propagator()->_journal->delSyncRuleByPath(fn);
+            }
         }
 
         // If the file is locked, we want to retry this sync when it
@@ -897,6 +903,17 @@ void PropagateDownloadFile::updateMetadata(bool isConflict)
         done(SyncFileItem::FatalError, tr("Error writing metadata to the database"));
         return;
     }
+
+    // ----isshe----add sync rule
+    // if (isDir && path == name)
+    qDebug() << "---isshe----: _item->_type == " << _item->_type << ", _item->_file = " << _item->_file;
+    if (_item->isFirstSubFolder()){
+        qDebug() << "---isshe----: setSyncRulesInfo--------";
+        SyncJournalDb::SyncRuleInfo info;
+        propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+        propagator()->_journal->setSyncRulesInfo(info, true);
+    }
+
     propagator()->_journal->setDownloadInfo(_item->_file, SyncJournalDb::DownloadInfo());
     propagator()->_journal->commit("download file start2");
     done(isConflict ? SyncFileItem::Conflict : SyncFileItem::Success);

@@ -152,6 +152,16 @@ void PropagateRemoteMkdir::success()
         return;
     }
 
+    // ----isshe----add sync rule
+    // if (isDir && path == name)
+    qDebug() << "---isshe----: _item->_type == " << _item->_type << ", _item->_file = " << _item->_file;
+    if (_item->isFirstSubFolder()){
+        qDebug() << "---isshe----: setSyncRulesInfo--------";
+        SyncJournalDb::SyncRuleInfo info;
+        propagator()->_journal->initSyncRuleInfo(info, _item->_file);
+        propagator()->_journal->setSyncRulesInfo(info, true);
+    }
+
     done(SyncFileItem::Success);
 }
 }

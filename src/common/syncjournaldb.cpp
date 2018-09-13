@@ -463,6 +463,8 @@ bool SyncJournalDb::checkConnect()
                         "policyruleid INTEGER,"
                         "lastsynctime INTEGER(8),"
                         "forcesync INTEGER default 0,"
+                        "needschedule INTEGER DEFAULT 0,"
+                        "needsync INTEGER DEFAULT 0,"
                         "enabled INTEGER default 1,"
                         "PRIMARY KEY(path)"
                         ");");
@@ -700,8 +702,9 @@ bool SyncJournalDb::checkConnect()
 
     _setSyncRulesQuery.reset(new SqlQuery(_db));
     if (_setSyncRulesQuery->prepare("INSERT OR REPLACE INTO syncrules "
-                                          "(path, inode, policyruleid, lastsynctime, forcesync, enabled) "
-                                          "VALUES (?1, ?2, ?3, ?4, ?5, ?6);")) {
+                                          "(path, inode, policyruleid, lastsynctime, "
+                                          "forcesync, needschedule, needsync, enabled) "
+                                          "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);")) {
         return sqlFail("prepare _setSyncRulesQuery", *_setSyncRulesQuery);
     }
 
@@ -713,6 +716,27 @@ bool SyncJournalDb::checkConnect()
     _getSyncRuleByPathQuery.reset(new SqlQuery(_db));
     if (_getSyncRuleByPathQuery->prepare("SELECT * FROM syncrules WHERE path=?1;")) {
         return sqlFail("prepare _getSyncRuleByPathQuery", *_getSyncRuleByPathQuery);
+    }
+
+    _setOrIgnoreSyncRulesQuery.reset(new SqlQuery(_db));
+    if (_setOrIgnoreSyncRulesQuery->prepare("INSERT OR IGNORE INTO syncrules "
+                                    "(path, inode, policyruleid, lastsynctime, "
+                                    "forcesync, needschedule, needsync, enabled) "
+                                    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);")) {
+        return sqlFail("prepare _setOrIgnoreSyncRulesQuery", *_setOrIgnoreSyncRulesQuery);
+    }
+
+    /*
+    _setNeedSyncAndScheduleByPathsQuery.reset(new SqlQuery(_db));
+    if (_setNeedSyncAndScheduleByPathsQuery->prepare("UPDATE syncrules set needschedule=?2, "
+                                              "needsync=?3 WHERE path IN ( ?1 );")) {
+        return sqlFail("prepare _setNeedSyncAndScheduleByPathsQuery", *_setNeedSyncAndScheduleByPathsQuery);
+    }
+     */
+
+    _getSyncRulesByNeedScheduleQuery.reset(new SqlQuery(_db));
+    if (_getSyncRulesByNeedScheduleQuery->prepare("SELECT * FROM syncrules WHERE needschedule=?1;")) {
+        return sqlFail("prepare _getSyncRulesByNeedScheduleQuery", *_getSyncRulesByNeedScheduleQuery);
     }
 
     // don't start a new transaction now
@@ -765,10 +789,12 @@ void SyncJournalDb::close()
 
     //----isshe----
     _getSyncRulesQuery.reset(nullptr);
-    _addSyncRulesQuery.reset(nullptr);
     _delSyncRuleByPathQuery.reset(nullptr);
     _setSyncRulesQuery.reset(nullptr);
     _getSyncRuleByPathQuery.reset(nullptr);
+    _setOrIgnoreSyncRulesQuery.reset(nullptr);
+    _setNeedSyncAndScheduleByPathsQuery.reset(nullptr);
+    _getSyncRulesByNeedScheduleQuery.reset(nullptr);
 
     _db.close();
     _avoidReadFromDbOnNextSyncFilter.clear();
@@ -2027,7 +2053,8 @@ bool operator==(const SyncJournalDb::UploadInfo &lhs,
 }
 
 
-QVector<SyncJournalDb::SyncRuleInfo> SyncJournalDb::getSyncRulesInfo(){
+QVector<SyncJournalDb::SyncRuleInfo> SyncJournalDb::getSyncRulesInfo()
+{
     QMutexLocker locker(&_mutex);
 
     QVector<SyncJournalDb::SyncRuleInfo> res;
@@ -2044,55 +2071,50 @@ QVector<SyncJournalDb::SyncRuleInfo> SyncJournalDb::getSyncRulesInfo(){
 
     while (_getSyncRulesQuery->next()) {
         SyncRuleInfo info;
-        info._path = _getSyncRulesQuery->stringValue(0);
-        info._inode = _getSyncRulesQuery->intValue(1);
-        info._policyruleid = _getSyncRulesQuery->intValue(2);
-        info._lastsynctime = _getSyncRulesQuery->int64Value(3);
-        info._forcesync = _getSyncRulesQuery->intValue(4);
-        info._enabled = _getSyncRulesQuery->intValue(5);
+        fillSyncRuleInfo(info, _getSyncRulesQuery);
         res.append(info);
     }
 
     return res;
 }
 
-bool SyncJournalDb::addSyncRulesInfo(SyncRuleInfo &info)
+void SyncJournalDb::initSyncRuleInfo(SyncRuleInfo &info, QString &path, int policyRuleId)
 {
-    QMutexLocker locker(&_mutex);
-
-    if (!checkConnect()) {
-        return false;
-    }
-
-    _addSyncRulesQuery->reset_and_clear_bindings();
-
-    _addSyncRulesQuery->bindValue(1, info._path);
-    _addSyncRulesQuery->bindValue(2, info._inode);
-    _addSyncRulesQuery->bindValue(3, info._policyruleid);
-    _addSyncRulesQuery->bindValue(4, info._lastsynctime);
-    _addSyncRulesQuery->bindValue(5, info._forcesync);
-    _addSyncRulesQuery->bindValue(6, info._enabled);
-
-    return _addSyncRulesQuery->exec();
+    info._path = path;
+    info._inode = 0;
+    info._policyruleid = policyRuleId;
+    info._lastsynctime = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());;
+    info._forcesync = 0;
+    info._enabled = 1;
+    info._needschedule = 0;
+    info._needsync = 0;
 }
 
-bool SyncJournalDb::setSyncRulesInfo(SyncRuleInfo &info)
+bool SyncJournalDb::setSyncRulesInfo(SyncRuleInfo &info, bool ignore)
 {
     QMutexLocker locker(&_mutex);
 
     if (!checkConnect()) {
         return false;
     }
+    SqlQuery *tempQuery = nullptr;
+    if (ignore) {
+        tempQuery = _setOrIgnoreSyncRulesQuery.data();
+    } else {
+        tempQuery = _setSyncRulesQuery.data();
+    }
 
-    _setSyncRulesQuery->reset_and_clear_bindings();
-    _setSyncRulesQuery->bindValue(1, info._path);
-    _setSyncRulesQuery->bindValue(2, info._inode);
-    _setSyncRulesQuery->bindValue(3, info._policyruleid);
-    _setSyncRulesQuery->bindValue(4, info._lastsynctime);
-    _setSyncRulesQuery->bindValue(5, info._forcesync);
-    _setSyncRulesQuery->bindValue(6, info._enabled);
+    tempQuery->reset_and_clear_bindings();
+    tempQuery->bindValue(1, info._path);
+    tempQuery->bindValue(2, info._inode);
+    tempQuery->bindValue(3, info._policyruleid);
+    tempQuery->bindValue(4, info._lastsynctime);
+    tempQuery->bindValue(5, info._forcesync);
+    tempQuery->bindValue(6, info._needschedule);
+    tempQuery->bindValue(7, info._needsync);
+    tempQuery->bindValue(8, info._enabled);
 
-    return _setSyncRulesQuery->exec();
+    return tempQuery->exec();
 }
 
 bool SyncJournalDb::delSyncRuleByPath(QString &path)
@@ -2129,18 +2151,135 @@ int SyncJournalDb::getSyncRuleByPath(QString &path, SyncRuleInfo *info)
 
     do
     {
-        info->_path = _getSyncRuleByPathQuery->stringValue(0);
-        info->_inode = _getSyncRuleByPathQuery->intValue(1);
-        info->_policyruleid = _getSyncRuleByPathQuery->intValue(2);
-        info->_lastsynctime = _getSyncRuleByPathQuery->int64Value(3);
-        info->_forcesync = _getSyncRuleByPathQuery->intValue(4);
-        info->_enabled = _getSyncRuleByPathQuery->intValue(5);
+        fillSyncRuleInfo(info, _getSyncRuleByPathQuery);
     } while (_getSyncRuleByPathQuery->next());
 
     return 1;
 }
 
+/*
+bool SyncJournalDb::doSetNeedSyncAndScheduleByPaths(int needSchedule, int needSync,
+                                                    QString &pathStr, int now)
+{
+    if (pathStr.isEmpty()) {
+        return false;
+    }
 
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    qDebug() << "-----isshe----: needSchedule = " << needSchedule << ", needSync = " << needSync << ", pathStr = " << pathStr;
+
+    //_setNeedSyncAndScheduleByPathsQuery->reset_and_clear_bindings();
+    //_setNeedSyncAndScheduleByPathsQuery->bindValue(1, pathStr.toLatin1());
+    //_setNeedSyncAndScheduleByPathsQuery->bindValue(2, needSchedule);
+    //_setNeedSyncAndScheduleByPathsQuery->bindValue(3, needSync);
+
+    //return _setNeedSyncAndScheduleByPathsQuery->exec();
+
+
+    QString sql = "UPDATE syncrules set " + "lastsynctime=" + QString::number(now)
+                  + ", needschedule=" + QString::number(needSchedule)
+                  + ", needsync=" + QString::number(needSync) + " WHERE path IN (" + pathStr + ")";
+
+    qCInfo(lcDb) << "----isshe----: sql = " << sql;
+    SqlQuery query(_db);
+    query.prepare(sql);
+
+    return query.exec();
+}
+*/
+
+bool SyncJournalDb::setNeedSyncAndScheduleByPaths(int needSchedule, int needSync,
+                                                  QVector<QString> &paths, int now, bool updateTimeStamp)
+{
+    QString pathStr;
+
+    for (int i = 0; i < paths.count(); i++) {
+        pathStr += "'" + paths.at(i) + "',";
+    }
+
+    if (pathStr.isEmpty()) {
+        return false;
+    }
+
+    pathStr.chop(1);       // 去掉最后的","
+
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    qDebug() << "-----isshe----: needSchedule = " << needSchedule << ", needSync = " << needSync << ", pathStr = " << pathStr;
+
+    QString sql = "UPDATE syncrules set ";
+    if (updateTimeStamp) {
+        sql += "lastsynctime=" + QString::number(now) + ", ";
+    }
+    sql += "needschedule=" + QString::number(needSchedule)
+            + ", needsync=" + QString::number(needSync) + " WHERE path IN (" + pathStr + ")";
+
+    qCInfo(lcDb) << "----isshe----: sql = " << sql;
+    SqlQuery query(_db);
+    query.prepare(sql);
+
+    return query.exec();
+}
+
+
+void SyncJournalDb::fillSyncRuleInfo(SyncJournalDb::SyncRuleInfo &info, QScopedPointer<SqlQuery> &query)
+{
+    info._path = query->stringValue(0);
+    info._inode = query->intValue(1);
+    info._policyruleid = query->intValue(2);
+    info._lastsynctime = query->int64Value(3);
+    info._forcesync = query->intValue(4);
+    info._needschedule = query->intValue(5);
+    info._needsync = query->intValue(6);
+    info._enabled = query->intValue(7);
+}
+
+void SyncJournalDb::fillSyncRuleInfo(SyncJournalDb::SyncRuleInfo *info, QScopedPointer<SqlQuery> &query)
+{
+    info->_path = query->stringValue(0);
+    info->_inode = query->intValue(1);
+    info->_policyruleid = query->intValue(2);
+    info->_lastsynctime = query->int64Value(3);
+    info->_forcesync = query->intValue(4);
+    info->_needschedule = query->intValue(5);
+    info->_needsync = query->intValue(6);
+    info->_enabled = query->intValue(7);
+}
+
+QVector<SyncJournalDb::SyncRuleInfo> SyncJournalDb::getSyncRulesByNeedSchedule(int needSchedule)
+{
+    QMutexLocker locker(&_mutex);
+
+    QVector<SyncJournalDb::SyncRuleInfo> res;
+
+    if (!checkConnect()) {
+        return res;
+    }
+
+    _getSyncRulesByNeedScheduleQuery->reset_and_clear_bindings();
+    _getSyncRulesByNeedScheduleQuery->bindValue(1, needSchedule);
+
+    if (!_getSyncRulesByNeedScheduleQuery->exec()) {
+        return res;
+    }
+
+    while (_getSyncRulesByNeedScheduleQuery->next()) {
+        SyncRuleInfo info;
+        fillSyncRuleInfo(info, _getSyncRulesByNeedScheduleQuery);
+        res.append(info);
+    }
+
+    return res;
+}
 
 
 } // namespace OCC

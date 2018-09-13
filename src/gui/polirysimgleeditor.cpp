@@ -4,10 +4,11 @@
 #include "csync.h"      // qDebug
 
 namespace OCC {
-    static QVector<int> intervalMinuteArray = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
+    static QVector<int> intervalMinuteArray = {1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
     static QVector<int> intervalHourArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24};
-    static QString minuteUnit = "Minutes";
+    static QString minuteUnit = "Minute(s)";
     static QString hourUnit = "Hour(s)";
+    static QString secondUnit = "Seconds";
     PolirySimgleEditor::PolirySimgleEditor(QWidget *parent) :
             QDialog(parent),
             ui(new Ui::PolirySimgleEditor) {
@@ -38,22 +39,32 @@ namespace OCC {
 
     void PolirySimgleEditor::prepareDaysCheckBox() {
         // 不要修改这里的顺序
+        _checkBoxs.append(ui->sundayCheckBox);
         _checkBoxs.append(ui->mondayCheckBox);
         _checkBoxs.append(ui->tuesdayCheckBox);
         _checkBoxs.append(ui->wednesdayCheckBox);
         _checkBoxs.append(ui->thursdayCheckBox);
         _checkBoxs.append(ui->fridayCheckBox);
         _checkBoxs.append(ui->saturdayCheckBox);
-        _checkBoxs.append(ui->sundayCheckBox);
     }
 
-    QString PolirySimgleEditor::formatIntervalMinute(int interval) {
+    QString PolirySimgleEditor::formatIntervalSecond(int interval)
+    {
+        return QString::number(interval) + " " + getSecondUnit();
+
+    }
+    QString PolirySimgleEditor::formatIntervalMinute(int interval)
+    {
         return QString::number(interval) + " " + getMinuteUnit();
-
     }
 
-    QString PolirySimgleEditor::formatIntervalHour(int interval) {
+    QString PolirySimgleEditor::formatIntervalHour(int interval)
+    {
         return QString::number(interval) + " " + getHourUnit();
+    }
+
+    QString PolirySimgleEditor::getSecondUnit() {
+        return tr("%1").arg(secondUnit);
     }
 
     QString PolirySimgleEditor::getMinuteUnit() {
@@ -109,5 +120,10 @@ namespace OCC {
             QCheckBox *checkBox = _checkBoxs.at(i);
             checkBox->setCheckState(days.at(i) == '1' ? Qt::Checked : Qt::Unchecked);
         }
+    }
+
+    bool PolirySimgleEditor::isDay(const QString &days, int i)
+    {
+        return days.at(i) == '1';
     }
 }

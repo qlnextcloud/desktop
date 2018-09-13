@@ -15,7 +15,9 @@
 
 #define REF_TRUE    1           // 大于1都是true
 #define REF_FALSE   0           // 小于1都是false
-#define DEF_DAYS    "1111100"
+#define DEF_DAYS    "0111110"
+#define HOUR_TO_SECOND 3600
+#define MINUTE_TO_SECOND 60
 
 namespace OCC {
     static int idCol = 0;
@@ -24,13 +26,13 @@ namespace OCC {
     static int daysNameCol = 3;
     static int intervalCol = 4;
     static int referencedCol = 5;
-    static QVector<QString> week = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
     PolicyRulesEditor::PolicyRulesEditor(QWidget *parent) :
             QDialog(parent),
             //_configDb(ConfigFile::globalConfigDbFile()),
             ui(new Ui::PolicyRulesEditor)
     {
         setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+        prepareWeek();
 
         ConfigFile cfg;
         _pconfigDb = cfg.getGlobalConfigDb();
@@ -103,19 +105,6 @@ namespace OCC {
         // 添加到table中
         addPattern(id, name, days, interval);
         //addPattern(QString("isshe"), false, 10);
-    }
-
-    QString PolicyRulesEditor::getDayNames(const QString &Days)
-    {
-        QString res;
-        qDebug() << "----isshe----- Days.count() = " << Days.count();
-        for (int i = 0; i < Days.count(); i++) {
-            if (Days.at(i) == '1') {
-                res.append(tr("%1").arg(week.at(i)) + ";");
-            }
-        }
-
-        return res;
     }
 
     int PolicyRulesEditor::addPattern(const QString &id, const QString &name,
@@ -198,7 +187,7 @@ namespace OCC {
         }
         qDebug() << "---isshe---: slotRemoveCurrentItem referenced = " << referenced;
 
-        ui->rmPolicyRulePushButton->setEnabled((referenced > 0));
+        ui->rmPolicyRulePushButton->setEnabled((referenced == 0));
         if (referenced) {
             ui->rmPolicyRulePushButton->setToolTip(tr("Be Referenced"));
         }
@@ -271,8 +260,12 @@ namespace OCC {
 
         // 这里单位和
         qDebug() << "----isshe----: PolirySimgleEditor::getHourUnit() = " << PolirySimgleEditor::getHourUnit();
-        if (intervalAndUnit.contains(PolirySimgleEditor::getHourUnit())) {
+        if (intervalAndUnit.contains(PolirySimgleEditor::getMinuteUnit())) {
             interval *= 60;
+        }
+
+        if (intervalAndUnit.contains(PolirySimgleEditor::getHourUnit())) {
+            interval *= 3600;
         }
 
         return interval;
@@ -378,13 +371,41 @@ namespace OCC {
 
     QString PolicyRulesEditor::convertInterval(int interval) {
         QString intervalStr;
-        if (interval < 60) {
-            intervalStr.append(PolirySimgleEditor::formatIntervalMinute(interval));
+        if (interval < MINUTE_TO_SECOND) {
+            intervalStr.append(PolirySimgleEditor::formatIntervalSecond(interval));
+        } else if (interval < HOUR_TO_SECOND) {
+            intervalStr.append(PolirySimgleEditor::formatIntervalMinute(interval / MINUTE_TO_SECOND));
         } else {
-            intervalStr.append(PolirySimgleEditor::formatIntervalHour(interval / 60));
+            intervalStr.append(PolirySimgleEditor::formatIntervalHour(interval / HOUR_TO_SECOND));
         }
 
         return intervalStr;
+    }
+
+    QString PolicyRulesEditor::getDayNames(const QString &Days)
+    {
+        QString res;
+        for (int i = 0; i < Days.count(); i++) {
+            if (Days.at(i) == '1') {
+                res.append(tr("%1").arg(_week.at(i)) + ";");
+            }
+        }
+
+        return res;
+    }
+
+    void PolicyRulesEditor::prepareWeek()
+    {
+        if (_week.isEmpty())
+        {
+            _week.append("Sunday");
+            _week.append("Monday");
+            _week.append("Tuesday");
+            _week.append("Wednesday");
+            _week.append("Thursday");
+            _week.append("Friday");
+            _week.append("Saturday");
+        }
     }
 
     //---------------------------------------------------------------------------------------

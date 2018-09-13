@@ -233,7 +233,11 @@ public:
     bool isEnabledSubFolderForceSync();
     void setForceSyncSubFolderLocalPath(QString& localPath);
     void setForceSyncSubFolderRemotePath(QString& remotePath);
-
+    void setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos,
+                                QDateTime &currentDateTime);
+    bool isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
+                   ConfigDb::PolicyInfo *policyRuleInfo,
+                   QDateTime &currentDateTime);
 
 signals:
     void syncStateChange();
@@ -358,7 +362,7 @@ private:
     /// Reset when no follow-up is requested.
     int _consecutiveFollowUpSyncs;
 
-    SyncJournalDb _journal;
+    SyncJournalDb _journal;         // 这里不是指针，这里回创建一个_journal
 
     ClientProxy _clientProxy;
 
@@ -381,6 +385,10 @@ private:
     QString _forceSyncSubFolderLocalPath;
     QString _forceSyncSubFolderRemotePath;
     //FolderStatusModel::SubFolderInfo *_forceSyncSubFolderInfo;
+
+    QVector<QString> _currentSyncSubPath;
+    QVector<QString> _currentNoSyncSubPath;
+    ConfigDb * _pGlobalConfigDb;
 
 };
 }

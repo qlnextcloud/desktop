@@ -174,6 +174,42 @@ namespace OCC {
             return false;
         }
 
+        // if (xxx)
+        // ...
+
+        return true;
+    }
+
+    bool ConfigDb::insertDefaultPolicyRules()
+    {
+        if( !checkConnect() ) {
+            return false;
+        }
+
+        SqlQuery query(_db);
+        query.prepare("INSERT OR IGNORE INTO policyrules (id, name, days, starttime, endtime, "
+                      "interval, referenced) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)");
+        query.bindValue(1, DEFAULT_POLICY_RULE_ID);
+        query.bindValue(2, tr("Default Rule"));
+        query.bindValue(3, QString(DEFAULT_POLICY_RULE_DAYS));
+        query.bindValue(4, 0);
+        query.bindValue(5, 0);
+        query.bindValue(6, DEFAULT_POLICY_RULE_INTERVAL);
+        query.bindValue(7, 0);
+        if( !query.exec() ) {
+            sqlFail("insertDefaultPolicyRules: insert default info fileid", query);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ConfigDb::insertDefaultInfo()
+    {
+        if (!insertDefaultPolicyRules())
+        {
+            return false;
+        }
         return true;
     }
 
@@ -251,7 +287,7 @@ namespace OCC {
         createQuery.prepare("CREATE TABLE IF NOT EXISTS policyrules("
                             "id INTEGER PRIMARY KEY,"
                             "name TEXT UNIQUE,"
-                            "days VARCHAR(8) DEFAULT '1111100',"
+                            "days VARCHAR(8) DEFAULT '0111110',"
                             "starttime INTEGER,"
                             "endtime INTEGER,"
                             "interval INTEGER,"
@@ -269,6 +305,11 @@ namespace OCC {
         bool rc = updateDatabaseStructure();
         if (!rc) {
             qCWarning(gbDb) << "Failed to update the database structure!";
+        }
+
+        rc = insertDefaultInfo();
+        if (!rc) {
+            qCWarning(gbDb) << "Failed to insert the default info";
         }
 
         // 以下进行数据库操作的准备工作
@@ -486,7 +527,7 @@ namespace OCC {
             referenced -= 1;
         }
 
-        ASSERT(referenced >= 0);
+        //ASSERT(referenced >= 0);
 
         _setPolicyRuleReferencedQuery->reset_and_clear_bindings();
         _setPolicyRuleReferencedQuery->bindValue(1, id);

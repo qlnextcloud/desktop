@@ -125,6 +125,14 @@ void PropagateRemoteDelete::slotDeleteJobFinished()
     }
 
     propagator()->_journal->deleteFileRecord(_item->_originalFile, _item->isDirectory());
+
+    // ----isshe----delete sync rule
+    // if (isDir && path == name)
+    qDebug() << "----isshe---: delSyncRuleByPath: file = " << _item->_originalFile;
+    if (_item->isFirstSubFolder()) {
+        propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+    }
+
     propagator()->_journal->commit("Remote Remove");
     done(SyncFileItem::Success);
 }
