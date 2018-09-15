@@ -18,6 +18,7 @@
 namespace OCC {
     Q_LOGGING_CATEGORY(gbDb, "globalconfig.database", QtInfoMsg)
 
+    ConfigDb *ConfigDb::_instance = nullptr;
 
     ConfigDb::ConfigDb(const QString &dbFilePath, QObject *parent)
             : QObject(parent)
@@ -25,13 +26,22 @@ namespace OCC {
             , _mutex(QMutex::Recursive)     // QMutex::NonRecursive) //
             , _transaction(0)
     {
+        ASSERT(!_instance);
+        _instance = this;
     }
 
 
     ConfigDb::~ConfigDb()
     {
         close();
+        _instance = nullptr;
     }
+
+    ConfigDb *ConfigDb::instance()
+    {
+        return _instance;
+    }
+
 
     void ConfigDb::close()
     {
@@ -195,7 +205,7 @@ namespace OCC {
         query.bindValue(4, 0);
         query.bindValue(5, 0);
         query.bindValue(6, DEFAULT_POLICY_RULE_INTERVAL);
-        query.bindValue(7, 0);
+        query.bindValue(7, DEFAULT_POLICY_RULE_REFERENCED);
         if( !query.exec() ) {
             sqlFail("insertDefaultPolicyRules: insert default info fileid", query);
             return false;
@@ -206,11 +216,7 @@ namespace OCC {
 
     bool ConfigDb::insertDefaultInfo()
     {
-        if (!insertDefaultPolicyRules())
-        {
-            return false;
-        }
-        return true;
+        return insertDefaultPolicyRules();
     }
 
     bool ConfigDb::checkConnect()
@@ -363,6 +369,7 @@ namespace OCC {
     {
         QMutexLocker lock(&_mutex);
         return checkConnect();
+
     }
 
     QVector<ConfigDb::PolicyInfo> ConfigDb::getPolicyInfo()

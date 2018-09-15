@@ -34,15 +34,12 @@ namespace OCC {
         setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
         prepareWeek();
 
-        ConfigFile cfg;
-        _pconfigDb = cfg.getGlobalConfigDb();
+        _pconfigDb = ConfigDb::instance();
 
         if (!_pconfigDb->isConnected()) {
             qDebug() << "----isshe----: ----数据库连接失败----";
             return;
         }
-
-        qDebug() << "----isshe----: ----数据库连接成功----";
 
         ui->setupUi(this);
         ui->descPolicyRulesLabel->setText(tr("-----isshe----- test description..."));
@@ -74,10 +71,6 @@ namespace OCC {
 
     PolicyRulesEditor::~PolicyRulesEditor()
     {
-        if (_pconfigDb) {
-            delete(_pconfigDb);
-        }
-
         delete ui;
     }
 
@@ -87,6 +80,8 @@ namespace OCC {
         QString tempDays = QString(DEF_DAYS);
 
         auto *simgleEditor = new PolirySimgleEditor(tr("Add Policy Rule"), this);
+        QStringList currentNamesList = generateCurrentNameList();
+        simgleEditor->setCurrentNameList(currentNamesList);
         simgleEditor->setDays(tempDays);
         //simgleEditor->setAttribute(Qt::WA_DeleteOnClose, true);
         if (simgleEditor->exec() != QDialog::Accepted) {
@@ -100,11 +95,8 @@ namespace OCC {
         QString interval = simgleEditor->getInterval();
         delete(simgleEditor);
 
-        // TODO: 进行信息校验
-
         // 添加到table中
         addPattern(id, name, days, interval);
-        //addPattern(QString("isshe"), false, 10);
     }
 
     int PolicyRulesEditor::addPattern(const QString &id, const QString &name,
@@ -216,26 +208,43 @@ namespace OCC {
     {
         // 获取当前行的信息
         int row = ui->policyRulesTableWidget->currentRow();
+        QTableWidgetItem *idItem = ui->policyRulesTableWidget->item(row, idCol);
         QTableWidgetItem *nameItem = ui->policyRulesTableWidget->item(row, nameCol);
         QTableWidgetItem *daysItem = ui->policyRulesTableWidget->item(row, daysCol);
         QTableWidgetItem *intervalItem = ui->policyRulesTableWidget->item(row, intervalCol);
+
+        bool canEdit = true;
+        QString tempIdStr = idItem->text();
+        bool ok = false;
+        int tempIdInt = tempIdStr.toInt(&ok);
+        if (ok && tempIdInt == DEFAULT_POLICY_RULE_ID) {
+            canEdit = false;
+        }
 
         // 设置信息到编辑界面
         auto *simgleEditor = new PolirySimgleEditor(tr("Edit Policy Rule"), this);
         QString tempName = nameItem->text();
         QString tempDays = daysItem->text();
         QString tempInterval = intervalItem->text();
-
-        simgleEditor->setName(tempName);
-        simgleEditor->setDays(tempDays);
-        simgleEditor->setInterval(tempInterval);
+        QStringList excludeList;
+        excludeList.append(tempName);
+        QStringList currentNamesList = generateCurrentNameList(excludeList);
+        simgleEditor->setCurrentNameList(currentNamesList);
+        simgleEditor->setName(tempName, canEdit);
+        simgleEditor->setDays(tempDays, canEdit);
+        simgleEditor->setInterval(tempInterval, canEdit);
 
         if (simgleEditor->exec() != QDialog::Accepted) {
             qDebug() << "-----isshe------: simgleEditor->exec() != QDialog::Accepted";
+            delete(simgleEditor);
             return ;
         }
 
-        // TODO:校验信息
+        if (!canEdit) {
+            delete(simgleEditor);
+            return ;
+        }
+
         QString name = simgleEditor->getName();
         QString days = simgleEditor->getDays();
         QString interval = simgleEditor->getInterval();
@@ -293,22 +302,18 @@ namespace OCC {
             bool ok = false;
             temp._id = idItem->text().toInt(&ok);
             if (!ok) {
-                qDebug() << "----isshe----: id toInt failed!!!: id = " << temp._id;
                 temp._id = -1;                      // -1 表示新的
             }
 
             temp._name = nameItem->text();
             temp._days = daysItem->text().toLatin1();
             QString intervalAndUnit = intervalItem->text();
-            qDebug() << "----isshe----: intervalAndUnit = " << intervalAndUnit;
             temp._interval = parseInterval(intervalAndUnit);
-            qDebug() << "----isshe----: temp->_interval = " << temp._interval;
 
             temp._referenced = referencedItem->text().toInt(&ok);
             if (!ok) {
-                qDebug() << "----isshe----: _referenced toInt failed!!!: id = " << temp._referenced;
-                //temp._referenced = 0;
-                continue;       // 跳过这条
+                qDebug() << "_referenced toInt failed: referencedItem->text() = " << referencedItem->text();
+                continue;
             }
 
             if (idItem->text().isEmpty()) {
@@ -359,10 +364,6 @@ namespace OCC {
             QVector<ConfigDb::PolicyInfo>::iterator iter;
             for (iter = infos.begin(); iter != infos.end(); iter++) {
 
-                // _referenced应该为非负数
-                if (iter->_referenced < REF_FALSE) {
-                    qDebug() << "-----isshe----: iter->_referenced 有错误！！！, = " << iter->_referenced;
-                }
                 addPattern(QString::number(iter->_id), iter->_name, iter->_days,
                            convertInterval(iter->_interval), iter->_referenced);
             }
@@ -407,73 +408,25 @@ namespace OCC {
             _week.append("Saturday");
         }
     }
-
-    //---------------------------------------------------------------------------------------
-    // 废弃！！！
-    // 以下是直接编辑行的实现（未完成）
-    int PolicyRulesEditor::addPattern(const QString &name, bool days, int interval)
-    {
-        int newRow = ui->policyRulesTableWidget->rowCount();
-        ui->policyRulesTableWidget->setRowCount(newRow + 1);
-
-
-        auto *idItem = new QTableWidgetItem();
-        idItem->setText("");
-        ui->policyRulesTableWidget->setItem(newRow, idCol, idItem);
-        //ui->policyRulesTableWidget->setColumnHidden(idCol, true);
-
-
-        auto *nameItem = new QTableWidgetItem();
-        nameItem->setText(name);
-        ui->policyRulesTableWidget->setItem(newRow, nameCol, nameItem);
-
-        /*
-        auto *daysItem = new QTableWidgetItem;
-        daysItem->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-        daysItem->setCheckState(days ? Qt::Checked : Qt::Unchecked);
-        ui->policyRulesTableWidget->setItem(newRow, daysCol, daysItem);
-        */
-        /*
-        QComboBox *comBox = new QComboBox();
-        comBox->addItem("Y");
-        comBox->addItem("X");
-        ui->policyRulesTableWidget->setCellWidget(newRow, daysCol, comBox);
-        */
-
-        /*
-        auto *pListWidget = new QListWidget(this);
-        //QLineEdit *pLineEdit = new QLineEdit(this);
-        for (int i = 0; i < 5; ++i)
-        {
-            auto *pItem = new QListWidgetItem(pListWidget);
-            pListWidget->addItem(pItem);
-            pItem->setData(Qt::UserRole, i);
-            auto *pCheckBox = new QCheckBox(this);
-            pCheckBox->setText(QStringLiteral("Qter%1").arg(i));
-            pListWidget->addItem(pItem);
-            pListWidget->setItemWidget(pItem, pCheckBox);
-            connect(pCheckBox, SIGNAL(stateChanged(int)), this, SLOT(slotStateChanged(int)));
+    QStringList PolicyRulesEditor::generateCurrentNameList() {
+        QStringList currentNameList;
+        for (int row = 0; row < ui->policyRulesTableWidget->rowCount(); ++row) {
+            QTableWidgetItem *nameItem = ui->policyRulesTableWidget->item(row, nameCol);
+            currentNameList.append(nameItem->text());
         }
+        return currentNameList;
+    }
 
-        auto *comBox = new QComboBox();
-        comBox->setModel(pListWidget->model());
-        comBox->setView(pListWidget);
-        QLineEdit *lineEdit = new QLineEdit();
-        comBox->setLineEdit(lineEdit);
-        ui->policyRulesTableWidget->setCellWidget(newRow, daysCol, comBox);
-
-        lineEdit->setReadOnly(true);                                                                                                                    //ui.comboBox->setEditable(true);
-        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(textChanged(const QString &)));
-        */
-
-        auto *daysItem = new QTableWidgetItem();
-        daysItem->setText("days");
-        ui->policyRulesTableWidget->setItem(newRow, daysCol, daysItem);
-
-        auto *intervalItem = new QTableWidgetItem();
-        intervalItem->setText("interval");
-        ui->policyRulesTableWidget->setItem(newRow, intervalCol, intervalItem);
-        return newRow;
+    QStringList PolicyRulesEditor::generateCurrentNameList(QStringList &excludeList) {
+        QStringList currentNameList;
+        for (int row = 0; row < ui->policyRulesTableWidget->rowCount(); ++row) {
+            QTableWidgetItem *nameItem = ui->policyRulesTableWidget->item(row, nameCol);
+            QString name = nameItem->text();
+            if (excludeList.indexOf(name) == -1 ) {
+                currentNameList.append(name);
+            }
+        }
+        return currentNameList;
     }
 
 } // namespace OCC

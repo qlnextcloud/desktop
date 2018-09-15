@@ -16,6 +16,7 @@
 #define DEFAULT_POLICY_RULE_ID 1
 #define DEFAULT_POLICY_RULE_DAYS "1111111"
 #define DEFAULT_POLICY_RULE_INTERVAL 60         // seconds
+#define DEFAULT_POLICY_RULE_REFERENCED 1
 
 namespace OCC {
 
@@ -25,6 +26,7 @@ namespace OCC {
     public:
         explicit ConfigDb(const QString &dbFilePath, QObject *parent = nullptr);
         virtual ~ConfigDb();
+        static ConfigDb *instance();
         void close();
 
         static QString makeDbName(const QString &localPath);
@@ -61,6 +63,7 @@ namespace OCC {
         bool updatePolicryRuleReferenced(int id, bool increase);
 
     private:
+        static ConfigDb *_instance;
         SqlDatabase _db;
         QString _dbFile;
         QMutex _mutex; // Public functions are protected with the mutex.

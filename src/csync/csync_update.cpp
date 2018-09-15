@@ -122,6 +122,11 @@ static int _csync_detect_update(CSYNC *ctx, std::unique_ptr<csync_file_stat_t> f
   } else {
     /* Check if file is excluded */
     excluded = csync_excluded_traversal(ctx, fs->path, fs->type);
+      if (excluded == CSYNC_NOT_EXCLUDED && ctx->current == REMOTE_REPLICA && ctx->callbacks.checkSyncRulesNoNeedSyncListHook) {
+          if (ctx->callbacks.checkSyncRulesNoNeedSyncListHook(ctx->callbacks.update_callback_userdata, fs->path)) {
+              excluded = CSYNC_FILE_EXCLUDE_CUR_NO_NEED_SYNC;
+          }
+      }
   }
 
   if( excluded == CSYNC_NOT_EXCLUDED ) {
@@ -395,6 +400,8 @@ out:
               fs->error_status = CSYNC_STATUS_INDIVIDUAL_IS_CONFLICT_FILE;
           } else if (excluded == CSYNC_FILE_EXCLUDE_CANNOT_ENCODE) {
               fs->error_status = CSYNC_STATUS_INDIVIDUAL_CANNOT_ENCODE;
+          } else if (excluded == CSYNC_FILE_EXCLUDE_CUR_NO_NEED_SYNC) {
+              fs->error_status = CSYNC_STATUS_NO_NEED_SYNC;
           }
       }
   }

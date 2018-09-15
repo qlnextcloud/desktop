@@ -215,6 +215,9 @@ class DiscoveryJob : public QObject
     bool checkSelectiveSyncNewFolder(const QString &path, RemotePermissions rp);
     static int checkSelectiveSyncNewFolderCallback(void *data, const QByteArray &path, RemotePermissions rm);
 
+    bool isInNoNeedSyncList(const QByteArray &path) const;
+    static int isInNoNeedSyncListCallback(void *data, const QByteArray &path);
+
     // Just for progress
     static void update_job_update_callback(bool local,
         const char *dirname,
@@ -244,6 +247,7 @@ public:
 
     QStringList _selectiveSyncBlackList;
     QStringList _selectiveSyncWhiteList;
+    QStringList _syncrulesNoNeedSyncList;
     SyncOptions _syncOptions;
     Q_INVOKABLE void start();
 signals:

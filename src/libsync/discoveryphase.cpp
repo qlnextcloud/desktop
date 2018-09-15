@@ -89,6 +89,35 @@ int DiscoveryJob::isInSelectiveSyncBlackListCallback(void *data, const QByteArra
     return static_cast<DiscoveryJob *>(data)->isInSelectiveSyncBlackList(path);
 }
 
+
+bool DiscoveryJob::isInNoNeedSyncList(const QByteArray &path) const
+{
+    if (_syncrulesNoNeedSyncList.isEmpty()) {
+        return false;
+    }
+
+    if (findPathInList(_syncrulesNoNeedSyncList, QString::fromUtf8(path))) {
+        qDebug() << "------isshe-----: " << path << " 在不需要同步名单 !!!!!!-----";
+        return true;
+    }
+
+    // Also try to adjust the path if there was renames
+    if (csync_rename_count(_csync_ctx)) {
+        QByteArray adjusted = csync_rename_adjust_parent_path_source(_csync_ctx, path);
+        if (adjusted != path) {
+            return findPathInList(_syncrulesNoNeedSyncList, QString::fromUtf8(adjusted));
+        }
+    }
+
+    return false;
+}
+
+int DiscoveryJob::isInNoNeedSyncListCallback(void *data, const QByteArray &path)
+{
+    return static_cast<DiscoveryJob*>(data)->isInNoNeedSyncList(path);
+}
+
+
 bool DiscoveryJob::checkSelectiveSyncNewFolder(const QString &path, RemotePermissions remotePerm)
 {
     if (_syncOptions._confirmExternalStorage
@@ -688,10 +717,12 @@ void DiscoveryJob::start()
 {
     _selectiveSyncBlackList.sort();
     _selectiveSyncWhiteList.sort();
+    _syncrulesNoNeedSyncList.sort();
     _csync_ctx->callbacks.update_callback_userdata = this;
     _csync_ctx->callbacks.update_callback = update_job_update_callback;
     _csync_ctx->callbacks.checkSelectiveSyncBlackListHook = isInSelectiveSyncBlackListCallback;
     _csync_ctx->callbacks.checkSelectiveSyncNewFolderHook = checkSelectiveSyncNewFolderCallback;
+    _csync_ctx->callbacks.checkSyncRulesNoNeedSyncListHook = isInNoNeedSyncListCallback;
 
     _csync_ctx->callbacks.remote_opendir_hook = remote_vio_opendir_hook;
     _csync_ctx->callbacks.remote_readdir_hook = remote_vio_readdir_hook;
@@ -707,6 +738,7 @@ void DiscoveryJob::start()
 
     _csync_ctx->callbacks.checkSelectiveSyncNewFolderHook = 0;
     _csync_ctx->callbacks.checkSelectiveSyncBlackListHook = 0;
+    _csync_ctx->callbacks.checkSyncRulesNoNeedSyncListHook = nullptr;
     _csync_ctx->callbacks.update_callback = 0;
     _csync_ctx->callbacks.update_callback_userdata = 0;
 

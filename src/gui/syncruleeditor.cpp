@@ -25,8 +25,7 @@ namespace OCC {
 
         //setSyncRuleFocus();
         // 读全局数据库
-        ConfigFile cfg;
-        _pconfigDb = cfg.getGlobalConfigDb();
+        _pconfigDb = ConfigDb::instance();
 
         if (!_pconfigDb->isConnected()) {
             QMessageBox::warning(this, tr("Error"), tr("Connect Db failed."));

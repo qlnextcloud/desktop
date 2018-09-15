@@ -71,8 +71,7 @@ Folder::Folder(const FolderDefinition &definition,
     _timeSinceLastSyncStart.start();
     _timeSinceLastSyncDone.start();
 
-    ConfigFile cfg;
-    _pGlobalConfigDb = cfg.getGlobalConfigDb();
+    _pGlobalConfigDb = ConfigDb::instance();
 
     SyncResult::Status status = SyncResult::NotYetStarted;
     if (definition.paused) {
@@ -386,7 +385,7 @@ void Folder::etagRetreived(const QString &etag)
 
     if (_currentSyncSubPath.count() > 0) {
         _journal.setNeedSyncAndScheduleByPaths(NONEEDSCHEDULE, NEEDSYNC,
-                                               _currentSyncSubPath, (int)now, true);
+                                               _currentSyncSubPath, (int)now, false); //true); 更新完成后再进行更新
         slotScheduleThisFolder();
     }
 
@@ -903,6 +902,11 @@ void Folder::slotSyncFinished(bool success)
     } else {
         // 这里把needSync状态改了
         _syncResult.setStatus(SyncResult::Success);
+
+        if (!_currentSyncSubPath.isEmpty()) {
+            time_t now = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());
+            _journal.setNeedSyncByPaths(NONEEDSYNC, _currentSyncSubPath, now, true);
+        }
     }
 
     // Count the number of syncs that have failed in a row.

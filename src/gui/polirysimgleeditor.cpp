@@ -20,6 +20,7 @@ namespace OCC {
             QDialog(parent),
             ui(new Ui::PolirySimgleEditor) {
         ui->setupUi(this);
+        this->setWindowTitle(title);
         ui->groupBox->setTitle(title);
         for (int i = 0; i < intervalMinuteArray.count(); i++) {
             ui->intervalComboBox->addItem(formatIntervalMinute(intervalMinuteArray.at(i)));
@@ -30,6 +31,8 @@ namespace OCC {
         }
 
         prepareDaysCheckBox();
+        _qLableErrorStyleSheet = "QLabel { color : red; }";
+        ui->errorLabel->setStyleSheet(_qLableErrorStyleSheet);
     }
 
     PolirySimgleEditor::~PolirySimgleEditor() {
@@ -79,15 +82,16 @@ namespace OCC {
         return ui->nameLineEdit->text();
     }
 
-    void PolirySimgleEditor::setName(QString &name) {
+    void PolirySimgleEditor::setName(QString &name, bool canEdit) {
         ui->nameLineEdit->setText(name);
+        ui->nameLineEdit->setEnabled(canEdit);
     }
 
     QString PolirySimgleEditor::getInterval() {
         return ui->intervalComboBox->currentText();
     }
 
-    void PolirySimgleEditor::setInterval(QString &Interval) {
+    void PolirySimgleEditor::setInterval(QString &Interval, bool canEdit) {
         int itemCount = ui->intervalComboBox->count();
 
         for (int i = 0; i < itemCount; i++) {
@@ -96,6 +100,7 @@ namespace OCC {
                 break;
             }
         }
+        ui->intervalComboBox->setEnabled(canEdit);
     }
 
     QString PolirySimgleEditor::getDayState(Qt::CheckState state) {
@@ -115,10 +120,11 @@ namespace OCC {
         return daysStr;
     }
 
-    void PolirySimgleEditor::setDays(const QString &days) {
+    void PolirySimgleEditor::setDays(const QString &days, bool canEdit) {
         for (int i = 0; i < days.count() && i < _checkBoxs.count(); i++) {
             QCheckBox *checkBox = _checkBoxs.at(i);
             checkBox->setCheckState(days.at(i) == '1' ? Qt::Checked : Qt::Unchecked);
+            checkBox->setEnabled(canEdit);
         }
     }
 
@@ -126,4 +132,53 @@ namespace OCC {
     {
         return days.at(i) == '1';
     }
+
+    bool PolirySimgleEditor::isEmptyDays(const QString &days)
+    {
+        for (int i = 0; i < days.count(); i++) {
+            if (days.at(i) == '1') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool PolirySimgleEditor::checkUserInput()
+    {
+        QString name = getName();
+        QString days = getDays();
+
+        if (name.isEmpty()) {
+            _errorString = tr("Name is Empty.");
+            return false;
+        }
+
+        if (isEmptyDays(days)) {
+            _errorString = tr("Choose at least one day.");
+            return false;
+        }
+
+        if (_currentNameList.indexOf(name) != -1)
+        {
+            _errorString = tr("This name already exists.");
+            return false;
+        }
+
+        return true;
+    }
+
+    void PolirySimgleEditor::accept()
+    {
+        if (checkUserInput()) {
+            done(QDialog::Accepted);
+        } else {
+            ui->errorLabel->setText(_errorString);
+        }
+    }
+
+    void PolirySimgleEditor::setCurrentNameList(QStringList &currentNameList)
+    {
+        _currentNameList = currentNameList;
+    }
+
 }

@@ -30,6 +30,8 @@ namespace OCC {
         QString convertInterval(int interval);
         QString getDayNames(const QString &Days);
         void prepareWeek();
+        QStringList generateCurrentNameList();
+        QStringList generateCurrentNameList(QStringList &excludeList);
 
     private slots:
         void slotAddPattern();

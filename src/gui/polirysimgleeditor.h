@@ -20,11 +20,11 @@ namespace OCC {
 
         void prepareDaysCheckBox();
         QString getName();
-        void setName(QString &name);
+        void setName(QString &name, bool canEdit = true);
         QString getInterval();
-        void setInterval(QString &Interval);
+        void setInterval(QString &Interval, bool canEdit = true);
         QString getDays();
-        void setDays(const QString &days);
+        void setDays(const QString &days, bool canEdit = true);
         QString getDayState(Qt::CheckState state);
         static QString getSecondUnit();
         static QString getMinuteUnit();
@@ -33,11 +33,17 @@ namespace OCC {
         static QString formatIntervalMinute(int interval);
         static QString formatIntervalHour(int interval);
         static bool isDay(const QString &days, int i);
-
+        void accept();
+        bool checkUserInput();
+        bool isEmptyDays(const QString &days);
+        void setCurrentNameList(QStringList &currentNameList);
 
     private:
         Ui::PolirySimgleEditor *ui;
         QVector<QCheckBox *> _checkBoxs;
+        QString _errorString;
+        QString _qLableErrorStyleSheet;
+        QStringList _currentNameList;
     };
 
 }

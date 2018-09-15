@@ -152,7 +152,6 @@ public:
     QString priorityFile(Scope scope) const;
     QString globalConfigDbFile() const;
     QString absoluteConfigDbPath() const;
-    ConfigDb * getGlobalConfigDb() const;
 
 protected:
     QVariant getPolicySetting(const QString &policy, const QVariant &defaultValue = QVariant()) const;

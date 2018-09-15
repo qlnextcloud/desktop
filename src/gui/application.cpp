@@ -155,6 +155,8 @@ Application::Application(int &argc, char **argv)
 
     // 全局数据库操作放这里
     cfg.globalConfigDbFile();
+    _globalConfigDb.reset(new ConfigDb(cfg.absoluteConfigDbPath()));
+    _globalConfigDb->isConnected();
 
     _folderManager.reset(new FolderMan);
 

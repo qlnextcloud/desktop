@@ -869,9 +869,9 @@ void PropagateDownloadFile::downloadFinished()
             propagator()->_journal->commit("download finished");
             // ----isshe----delete sync rule
             // if (isDir && path == name)
-            qDebug() << "----isshe---: delSyncRuleByPath: file = " << fn;
-            if (_item->isDirectory() && !fn.contains('/')) {
-                propagator()->_journal->delSyncRuleByPath(fn);
+            if (_item->isFirstSubFolder()) {
+                deleteSyncAndPolicyRule(propagator()->_journal, _item->_file);
+                //propagator()->_journal->delSyncRuleByPath(fn);
             }
         }
 
@@ -906,12 +906,8 @@ void PropagateDownloadFile::updateMetadata(bool isConflict)
 
     // ----isshe----add sync rule
     // if (isDir && path == name)
-    qDebug() << "---isshe----: _item->_type == " << _item->_type << ", _item->_file = " << _item->_file;
     if (_item->isFirstSubFolder()){
-        qDebug() << "---isshe----: setSyncRulesInfo--------";
-        SyncJournalDb::SyncRuleInfo info;
-        propagator()->_journal->initSyncRuleInfo(info, _item->_file);
-        propagator()->_journal->setSyncRulesInfo(info, true);
+        updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
     }
 
     propagator()->_journal->setDownloadInfo(_item->_file, SyncJournalDb::DownloadInfo());

@@ -739,6 +739,12 @@ bool SyncJournalDb::checkConnect()
         return sqlFail("prepare _getSyncRulesByNeedScheduleQuery", *_getSyncRulesByNeedScheduleQuery);
     }
 
+    _getPathByForceSyncAndNeedSyncQuery.reset(new SqlQuery(_db));
+    if (_getPathByForceSyncAndNeedSyncQuery->prepare("SELECT path FROM syncrules "
+                                                     "WHERE forcesync=?1 AND needsync=?2;")) {
+        return sqlFail("prepare _getPathByForceSyncAndNeedSyncQuery", *_getPathByForceSyncAndNeedSyncQuery);
+    }
+
     // don't start a new transaction now
     commitInternal(QString("checkConnect End"), false);
 
@@ -795,6 +801,7 @@ void SyncJournalDb::close()
     _setOrIgnoreSyncRulesQuery.reset(nullptr);
     _setNeedSyncAndScheduleByPathsQuery.reset(nullptr);
     _getSyncRulesByNeedScheduleQuery.reset(nullptr);
+    _getPathByForceSyncAndNeedSyncQuery.reset(nullptr);
 
     _db.close();
     _avoidReadFromDbOnNextSyncFilter.clear();
@@ -2280,6 +2287,76 @@ QVector<SyncJournalDb::SyncRuleInfo> SyncJournalDb::getSyncRulesByNeedSchedule(i
 
     return res;
 }
+
+QStringList SyncJournalDb::getPathsByForceSyncAndNeedSync(int forceSync, int needSync, bool *ok)
+{
+    QStringList res;
+    ASSERT(ok);
+
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        *ok = false;
+        return res;
+    }
+
+    _getPathByForceSyncAndNeedSyncQuery->reset_and_clear_bindings();
+    _getPathByForceSyncAndNeedSyncQuery->bindValue(1, forceSync);
+    _getPathByForceSyncAndNeedSyncQuery->bindValue(2, needSync);
+    if (!_getPathByForceSyncAndNeedSyncQuery->exec()){
+        qWarning() << "SQL query failed: "<< _getPathByForceSyncAndNeedSyncQuery->error();
+        *ok = false;
+        return res;
+    }
+
+    while(_getPathByForceSyncAndNeedSyncQuery->next()) {
+        QString path = _getPathByForceSyncAndNeedSyncQuery->stringValue(0);
+        if (!path.endsWith(QLatin1Char('/'))) {
+            path.append(QLatin1Char('/'));
+        }
+        res.append(path);
+    }
+
+    *ok = true;
+    return res;
+}
+
+bool SyncJournalDb::setNeedSyncByPaths(int needSync, QVector<QString> &paths,
+                                       int now, bool updateTimeStamp)
+{
+    QString pathStr;
+
+    for (int i = 0; i < paths.count(); i++) {
+        pathStr += "'" + paths.at(i) + "',";
+    }
+
+    if (pathStr.isEmpty()) {
+        return false;
+    }
+
+    pathStr.chop(1);       // 去掉最后的","
+
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    qDebug() << "-----isshe----: needSync = " << needSync << ", pathStr = " << pathStr;
+
+    QString sql = "UPDATE syncrules set ";
+    if (updateTimeStamp) {
+        sql += "lastsynctime=" + QString::number(now) + ", ";
+    }
+    sql +="needsync=" + QString::number(needSync) + " WHERE path IN (" + pathStr + ")";
+
+    qCInfo(lcDb) << "----isshe----: sql = " << sql;
+    SqlQuery query(_db);
+    query.prepare(sql);
+
+    return query.exec();
+}
+
 
 
 } // namespace OCC

@@ -31,6 +31,7 @@
 #include "progressdispatcher.h"
 #include "clientproxy.h"
 #include "folderman.h"
+#include "common/configdb.h"
 
 class QMessageBox;
 class QSystemTrayIcon;
@@ -124,6 +125,9 @@ private:
     QScopedPointer<CrashReporter::Handler> _crashHandler;
 #endif
     QScopedPointer<FolderMan> _folderManager;
+
+    //----isshe----
+    QScopedPointer<ConfigDb> _globalConfigDb;
 };
 
 } // namespace OCC

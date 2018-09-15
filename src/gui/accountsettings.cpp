@@ -51,6 +51,7 @@
 #include <qpropertyanimation.h>
 
 #include "account.h"
+#include "common/configdb.h"
 
 #ifdef Q_OS_MAC
 #include "settingsdialogmac.h"
@@ -915,6 +916,26 @@ void AccountSettings::slotDeleteAccount()
         messageBox.exec();
         if (messageBox.clickedButton() != yesButton) {
             return;
+        }
+    }
+
+    ConfigDb* globalConfigDb = ConfigDb::instance();
+    SyncJournalDb::SyncRuleInfo syncInfo;
+    for (auto folder : _model->_folders) {
+        if (folder._folder->accountState() != _accountState) {
+            continue;
+        }
+
+        for (auto subFolder : folder._subs) {
+            QString path = subFolder._path;
+            if (path.contains(QLatin1Char('/'))) {
+                path.chop(1);
+            }
+
+            int isExist = subFolder._folder->journalDb()->getSyncRuleByPath(path, &syncInfo);
+            if (isExist > 0) {
+                globalConfigDb->updatePolicryRuleReferenced(syncInfo._policyruleid, false);
+            }
         }
     }
 

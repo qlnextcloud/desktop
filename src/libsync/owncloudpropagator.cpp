@@ -740,6 +740,44 @@ OwncloudPropagator *PropagatorJob::propagator() const
     return qobject_cast<OwncloudPropagator *>(parent());
 }
 
+void PropagatorJob::updateSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path)
+{
+    qDebug() << "---isshe----: updateSyncAndPolicyRule---1--------";
+    SyncJournalDb::SyncRuleInfo syncInfo;
+    int isExist = journalDb->getSyncRuleByPath(path, &syncInfo);
+    updateSyncAndPolicyRule(journalDb, path, isExist, syncInfo);
+}
+
+void PropagatorJob::updateSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path,
+                                            int isExist, SyncJournalDb::SyncRuleInfo &syncInfo)
+{
+    qDebug() << "---isshe----: updateSyncAndPolicyRule---2--------";
+    if (isExist <= 0) {
+        journalDb->initSyncRuleInfo(syncInfo, path);
+    } else {
+        syncInfo._path = path;
+    }
+    journalDb->setSyncRulesInfo(syncInfo, true);
+    ConfigDb::instance()->updatePolicryRuleReferenced(syncInfo._policyruleid, true);
+}
+
+void PropagatorJob::deleteSyncAndPolicyRule(SyncJournalDb *journalDb, int isExist, SyncJournalDb::SyncRuleInfo &syncInfo)
+{
+    qDebug() << "---isshe----: deleteSyncAndPolicyRule---1--------";
+    if (isExist > 0) {
+        journalDb->delSyncRuleByPath(syncInfo._path);
+        ConfigDb::instance()->updatePolicryRuleReferenced(syncInfo._policyruleid, false);
+    }
+}
+
+void PropagatorJob::deleteSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path)
+{
+    qDebug() << "---isshe----: deleteSyncAndPolicyRule---2--------";
+    SyncJournalDb::SyncRuleInfo syncInfo;
+    int isExist = journalDb->getSyncRuleByPath(path, &syncInfo);
+    deleteSyncAndPolicyRule(journalDb, isExist, syncInfo);
+}
+
 // ================================================================================
 
 PropagatorJob::JobParallelism PropagatorCompositeJob::parallelism()
@@ -935,6 +973,8 @@ void PropagateDirectory::slotFirstJobFinished(SyncFileItem::Status status)
 void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
 {
     if (!_item->isEmpty() && status == SyncFileItem::Success) {
+        SyncJournalDb::SyncRuleInfo syncInfo;
+        int isExist = propagator()->_journal->getSyncRuleByPath(_item->_originalFile, &syncInfo);
         if (!_item->_renameTarget.isEmpty()) {
             if (_item->_instruction == CSYNC_INSTRUCTION_RENAME
                 && _item->_originalFile != _item->_renameTarget) {
@@ -942,9 +982,8 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
                 propagator()->_journal->deleteFileRecord(_item->_originalFile, true);
                 // ----isshe----delete sync rule
                 // if (isDir && path == name)
-                qDebug() << "----isshe---: delSyncRuleByPath: file = " << _item->_originalFile;
                 if (_item->isFirstSubFolder()) {
-                    propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+                    deleteSyncAndPolicyRule(propagator()->_journal, isExist, syncInfo);
                 }
             }
 
@@ -972,12 +1011,8 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
             }
             // ----isshe----add sync rule
             // if (isDir && path == name)
-            qDebug() << "---isshe----: _item->_type == " << _item->_type << ", _item->_file = " << _item->_file;
             if (_item->isFirstSubFolder()){
-                qDebug() << "---isshe----: setSyncRulesInfo--------";
-                SyncJournalDb::SyncRuleInfo info;
-                propagator()->_journal->initSyncRuleInfo(info, _item->_file);
-                propagator()->_journal->setSyncRulesInfo(info, true);
+                updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
             }
         }
     }
@@ -1032,12 +1067,8 @@ void CleanupPollsJob::slotPollFinished()
 
         // ----isshe----add sync rule
         // if (isDir && path == name)
-        qDebug() << "---isshe----: _item->_type == " << job->_item->_type << ", _item->_file = " << job->_item->_file;
         if (job->_item->isFirstSubFolder()){
-            qDebug() << "---isshe----: setSyncRulesInfo--------";
-            SyncJournalDb::SyncRuleInfo info;
-            _journal->initSyncRuleInfo(info, job->_item->_file);
-            _journal->setSyncRulesInfo(info, true);
+            PropagatorJob::updateSyncAndPolicyRule(_journal, job->_item->_file);
         }
     }
     // Continue with the next entry, or finish

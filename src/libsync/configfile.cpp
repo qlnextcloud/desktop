@@ -101,13 +101,6 @@ ConfigFile::ConfigFile()
     if (_globalConfigDbFile.isEmpty()) {
         _globalConfigDbFile = ConfigDb::makeDbName(configPath());
     }
-
-    if (!_pconfigDb) {
-        _pconfigDb = new ConfigDb(absoluteConfigDbPath());
-        if (_pconfigDb){
-            _pconfigDb->isConnected();
-        }
-    }
 }
 
 bool ConfigFile::setConfDir(const QString &value)
@@ -785,10 +778,4 @@ QString ConfigFile::absoluteConfigDbPath() const
 {
     return QDir(_confDir).filePath(_globalConfigDbFile);
 }
-
-ConfigDb * ConfigFile::getGlobalConfigDb() const
-{
-    return _pconfigDb;
-}
-
 }

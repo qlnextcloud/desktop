@@ -483,6 +483,9 @@ int SyncEngine::treewalkFile(csync_file_stat_t *file, csync_file_stat_t *other, 
     case CSYNC_STATUS_INDIVIDUAL_CANNOT_ENCODE:
         item->_errorString = tr("The filename cannot be encoded on your file system.");
         break;
+    case CSYNC_STATUS_NO_NEED_SYNC:
+        item->_errorString = tr("Folder does not need to be sync in current.");
+        break;
     case CSYNC_STATUS_INDIVIDUAL_IS_CONFLICT_FILE:
         item->_status = SyncFileItem::Conflict;
         if (Utility::shouldUploadConflictFiles()) {
@@ -874,6 +877,11 @@ void SyncEngine::startSync()
         csyncError(tr("Unable to read from the sync journal."));
         finalize(false);
         return;
+    }
+
+    discoveryJob->_syncrulesNoNeedSyncList = _journal->getPathsByForceSyncAndNeedSync(0, 0, &ok);
+    if (!ok) {
+        qCWarning(lcEngine) << "Unable to read NotTimeoutList, ignored.";
     }
 
     discoveryJob->_syncOptions = _syncOptions;
