@@ -1,17 +1,34 @@
 //
 // Created by isshe on 2018/9/4.
 //
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <stdio.h>
 
-#include "csync_priority.h"
-#include "csync_private.h"
-#include "csync_misc.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "c_lib.h"
 #include "c_private.h"
 #include "c_utf8.h"
 
+#include "csync_private.h"
+#include "csync_priority.h"
+#include "csync_misc.h"
+
 #include "common/utility.h"
 
+#include <QString>
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+#define CSYNC_LOG_CATEGORY_NAME "csync.priority"
 #include "csync_log.h"
 
 #ifndef WITH_TESTING
