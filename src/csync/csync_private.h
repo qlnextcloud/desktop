@@ -128,6 +128,7 @@ struct OCSYNC_EXPORT csync_s {
       int (*checkSelectiveSyncBlackListHook)(void*, const QByteArray &) = nullptr;
       int (*checkSelectiveSyncNewFolderHook)(void *, const QByteArray & /* path */, OCC::RemotePermissions) = nullptr;
       int (*checkSyncRulesNoNeedSyncListHook)(void*, const QByteArray &) = nullptr;
+      int (*checkForceSyncForceSyncListHook)(void*, const QByteArray &) = nullptr;
 
 
       csync_vio_opendir_hook remote_opendir_hook = nullptr;

@@ -20,7 +20,7 @@ namespace OCC {
         ui->setupUi(this);
 
         // set description
-        ui->descPriorityFilesLabel->setText(tr("-----isshe----- test description..."));
+        ui->descPriorityFilesLabel->setText(tr("Files or folders that match the pattern will be prioritized to other files or folders in the same directory."));
 
         ConfigFile cfgFile;
         readPriorityFile(cfgFile.priorityFile(ConfigFile::UserScope));

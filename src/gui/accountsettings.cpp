@@ -176,7 +176,6 @@ AccountSettings::AccountSettings(AccountState *accountState, QWidget *parent)
     connect(FolderMan::instance(), &FolderMan::folderListChanged, _model, &FolderStatusModel::resetFolders);
     connect(this, &AccountSettings::folderChanged, _model, &FolderStatusModel::resetFolders);
 
-
     QColor color = palette().highlight().color();
     ui->quotaProgressBar->setStyleSheet(QString::fromLatin1(progressBarStyleC).arg(color.name()));
 
@@ -278,9 +277,9 @@ void AccountSettings::slotForceSyncSubFolder()
     Folder *f = subInfo->_folder;
 
     // 在这里备份/更新信息，再Finish恢复信息
-    f->setForceSyncSubFolderLocalPath(subInfo->_path);
-    f->setForceSyncSubFolderRemotePath(subInfo->_path);
     f->enableForceUpdateSubFolder();            // 开强制更新，在finished/abort中关闭
+    f->setForceSyncFolderPath(subInfo->_path);
+    f->saveForceSyncFolderToDb(subInfo->_path, FORCESYNC, ENABLE);
 
     folderMan->scheduleFolderNext(f);
 }
@@ -299,15 +298,6 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
         FolderStatusModel::SubFolderInfo *subInfo = _model->infoForIndex(index);
         QAction *ac = nullptr;
 
-        // ----isshe----: 先放到根目录，之后移动到子目录!!!!
-        QString subPath = subInfo->_path;
-        QString subName = subInfo->_name;
-        subPath.chop(1);
-        if (subPath == subName) {           // 是一级子目录
-            ac = menu->addAction(tr("Set Sync Rule"));
-            connect(ac, &QAction::triggered, this, &AccountSettings::slotSetSyncRule);
-        }
-
         //QAction *ac = menu->addAction(tr("Open folder"));
         ac = menu->addAction(tr("Open folder"));
         connect(ac, &QAction::triggered, this, &AccountSettings::slotOpenCurrentLocalSubFolder);
@@ -322,6 +312,15 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
             ac = menu->addAction(tr("Force sync now"));
             ac->setEnabled(_accountState->isConnected());
             connect(ac, SIGNAL(triggered(bool)), this, SLOT(slotForceSyncSubFolder()));
+        }
+
+        QString subPath = subInfo->_path;
+        QString subName = subInfo->_name;
+        subPath.chop(1);
+        if (subPath == subName) {           // 是一级子目录
+            ac = menu->addAction(tr("Set Sync Rule"));
+            connect(ac, &QAction::triggered, this, &AccountSettings::slotSetSyncRule);
+
         }
 
         menu->popup(tv->mapToGlobal(pos));

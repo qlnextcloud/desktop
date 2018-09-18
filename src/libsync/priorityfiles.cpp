@@ -42,7 +42,6 @@ bool PriorityFiles::reloadPrioritys(){
 
     bool success = true;
     foreach (const QString &file, _priorityFiles) {
-        qDebug() << "----isshe----: PriorityFiles::reloadPrioritys: file = " << file;
         if (csync_priority_load(file.toUtf8(), _prioritysPtr) < 0)
         {
             success = false;

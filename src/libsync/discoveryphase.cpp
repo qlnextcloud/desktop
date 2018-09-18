@@ -34,7 +34,7 @@ namespace OCC {
 Q_LOGGING_CATEGORY(lcDiscovery, "sync.discovery", QtInfoMsg)
 
 /* Given a sorted list of paths ending with '/', return whether or not the given path is within one of the paths of the list*/
-static bool findPathInList(const QStringList &list, const QString &path)
+static bool findPathInList(const QStringList &list, const QString &path, bool checkPath = true)
 {
     Q_ASSERT(std::is_sorted(list.begin(), list.end()));
 
@@ -57,7 +57,9 @@ static bool findPathInList(const QStringList &list, const QString &path)
         return false;
     }
     --it;
-    Q_ASSERT(it->endsWith(QLatin1Char('/'))); // Folder::setSelectiveSyncBlackList makes sure of that
+    if (checkPath) {
+        Q_ASSERT(it->endsWith(QLatin1Char('/'))); // Folder::setSelectiveSyncBlackList makes sure of that
+    }
     return pathSlash.startsWith(*it);
 }
 
@@ -96,8 +98,7 @@ bool DiscoveryJob::isInNoNeedSyncList(const QByteArray &path) const
         return false;
     }
 
-    if (findPathInList(_syncrulesNoNeedSyncList, QString::fromUtf8(path))) {
-        qDebug() << "------isshe-----: " << path << " 在不需要同步名单 !!!!!!-----";
+    if (findPathInList(_syncrulesNoNeedSyncList, QString::fromUtf8(path), false)) {
         return true;
     }
 
@@ -105,7 +106,7 @@ bool DiscoveryJob::isInNoNeedSyncList(const QByteArray &path) const
     if (csync_rename_count(_csync_ctx)) {
         QByteArray adjusted = csync_rename_adjust_parent_path_source(_csync_ctx, path);
         if (adjusted != path) {
-            return findPathInList(_syncrulesNoNeedSyncList, QString::fromUtf8(adjusted));
+            return findPathInList(_syncrulesNoNeedSyncList, QString::fromUtf8(adjusted), false);
         }
     }
 
@@ -116,6 +117,54 @@ int DiscoveryJob::isInNoNeedSyncListCallback(void *data, const QByteArray &path)
 {
     return static_cast<DiscoveryJob*>(data)->isInNoNeedSyncList(path);
 }
+
+
+int DiscoveryJob::isForceSyncListCallback(void *data, const QByteArray &path){
+    return static_cast<DiscoveryJob*>(data)->isInForceSyncList(path);
+}
+
+bool DiscoveryJob::isParent(const QStringList &forceSyncList, const QByteArray &path) const
+{
+    QString cpPath = path;
+    if (!cpPath.endsWith(QLatin1Char('/'))) {
+        cpPath.append(QLatin1Char('/'));
+    }
+    for (int i = 0; i < forceSyncList.count(); i++) {
+        if (forceSyncList.at(i).startsWith(cpPath)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+int DiscoveryJob::isInForceSyncList(const QByteArray &path) const
+{
+    if (_forceSyncList.isEmpty()) {
+        return -1;
+    }
+
+    // 完全匹配
+    if (findPathInList(_forceSyncList, QString::fromUtf8(path))) {
+        return 1;
+    }
+
+    // 匹配父目录
+    if (isParent(_forceSyncList, path)) {
+        return 1;
+    }
+
+    // Also try to adjust the path if there was renames
+    if (csync_rename_count(_csync_ctx)) {
+        QByteArray adjusted = csync_rename_adjust_parent_path_source(_csync_ctx, path);
+        if (adjusted != path) {
+            return (int)findPathInList(_forceSyncList, QString::fromUtf8(adjusted));
+        }
+    }
+
+    return 0;
+}
+
 
 
 bool DiscoveryJob::checkSelectiveSyncNewFolder(const QString &path, RemotePermissions remotePerm)
@@ -718,11 +767,13 @@ void DiscoveryJob::start()
     _selectiveSyncBlackList.sort();
     _selectiveSyncWhiteList.sort();
     _syncrulesNoNeedSyncList.sort();
+    _forceSyncList.sort();
     _csync_ctx->callbacks.update_callback_userdata = this;
     _csync_ctx->callbacks.update_callback = update_job_update_callback;
     _csync_ctx->callbacks.checkSelectiveSyncBlackListHook = isInSelectiveSyncBlackListCallback;
     _csync_ctx->callbacks.checkSelectiveSyncNewFolderHook = checkSelectiveSyncNewFolderCallback;
     _csync_ctx->callbacks.checkSyncRulesNoNeedSyncListHook = isInNoNeedSyncListCallback;
+    _csync_ctx->callbacks.checkForceSyncForceSyncListHook = isForceSyncListCallback;
 
     _csync_ctx->callbacks.remote_opendir_hook = remote_vio_opendir_hook;
     _csync_ctx->callbacks.remote_readdir_hook = remote_vio_readdir_hook;
@@ -739,6 +790,7 @@ void DiscoveryJob::start()
     _csync_ctx->callbacks.checkSelectiveSyncNewFolderHook = 0;
     _csync_ctx->callbacks.checkSelectiveSyncBlackListHook = 0;
     _csync_ctx->callbacks.checkSyncRulesNoNeedSyncListHook = nullptr;
+    _csync_ctx->callbacks.checkForceSyncForceSyncListHook = nullptr;
     _csync_ctx->callbacks.update_callback = 0;
     _csync_ctx->callbacks.update_callback_userdata = 0;
 

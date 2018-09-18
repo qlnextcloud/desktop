@@ -260,10 +260,8 @@ void PropagateLocalRename::start()
 
     // ----isshe----delete sync rule
     // if (isDir && path == name)
-    SyncJournalDb::SyncRuleInfo syncInfo;
-    int isExist = propagator()->_journal->getSyncRuleByPath(_item->_originalFile, &syncInfo);
     if (_item->isFirstSubFolder()) {
-        deleteSyncAndPolicyRule(propagator()->_journal, isExist, syncInfo);
+        deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
     }
 
     // store the rename file name in the item.
@@ -289,7 +287,8 @@ void PropagateLocalRename::start()
         // ----isshe----add sync rule
         // if (isDir && path == name)
         if (_item->isFirstSubFolder()){
-            updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
+            //updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
+            updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
         }
 
     }

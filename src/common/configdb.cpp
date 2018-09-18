@@ -57,6 +57,7 @@ namespace OCC {
         _getPolicyRuleByIdQuery.reset(nullptr);
         _getPolicyRulesReferencedByIdQuery.reset(nullptr);
         _setPolicyRuleReferencedQuery.reset(nullptr);
+        _getPolicyRuleNameByIdQuery.reset(nullptr);
 
         _db.close();
     }
@@ -359,6 +360,11 @@ namespace OCC {
             return sqlFail("prepare _setPolicyRuleReferencedQuery", *_setPolicyRuleReferencedQuery);
         }
 
+        _getPolicyRuleNameByIdQuery.reset(new SqlQuery(_db));
+        if (_getPolicyRuleNameByIdQuery->prepare("SELECT name FROM policyrules WHERE id=?1;")) {
+            return sqlFail("prepare _getPolicyRuleNameByIdQuery", *_getPolicyRuleNameByIdQuery);
+        }
+
         commitInternal(QString("checkConnect End"), false);
 
         return rc;
@@ -400,6 +406,33 @@ namespace OCC {
 
         return res;
     }
+
+    QString ConfigDb::getPolicyRuleNameById(int id)
+    {
+        QMutexLocker locker(&_mutex);
+
+        QString res;
+        if (!checkConnect()) {
+            return res;
+        }
+
+        _getPolicyRuleNameByIdQuery->reset_and_clear_bindings();
+        _getPolicyRuleNameByIdQuery->bindValue(1, id);
+
+        if (!_getPolicyRuleNameByIdQuery->exec()) {
+            return res;
+        }
+
+
+        while (_getPolicyRuleNameByIdQuery->next()) {
+            if (res.isEmpty()) {
+                res = _getPolicyRuleNameByIdQuery->stringValue(0);
+            }
+        }
+        return res;
+    }
+
+
 
     /**
      *

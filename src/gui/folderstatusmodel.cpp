@@ -128,11 +128,13 @@ Qt::ItemFlags FolderStatusModel::flags(const QModelIndex &index) const
 
 QVariant FolderStatusModel::data(const QModelIndex &index, int role) const
 {
+
     if (!index.isValid())
         return QVariant();
 
     if (role == Qt::EditRole)
         return QVariant();
+
 
     switch (classify(index)) {
     case AddButton: {
@@ -149,9 +151,23 @@ QVariant FolderStatusModel::data(const QModelIndex &index, int role) const
     case SubFolder: {
         const auto &x = static_cast<SubFolderInfo *>(index.internalPointer())->_subs[index.row()];
         switch (role) {
-        case Qt::DisplayRole:
+        case Qt::DisplayRole: {
             //: Example text: "File.txt (23KB)"
-            return x._size < 0 ? x._name : tr("%1 (%2)").arg(x._name, Utility::octetsToString(x._size));
+            QString path = x._path;
+            if (path.endsWith(QLatin1Char('/'))) {
+                path.chop(1);
+            }
+            int policyRuleId = x._folder->journalDb()->getPolicyRuleIdByPath(path);
+            QString policyRuleName;
+            if (policyRuleId != -1) {
+                policyRuleName = x._folder->globalConfigDb()->getPolicyRuleNameById(policyRuleId);
+            }
+            QString resStr = x._size < 0 ? x._name : tr("%1 (%2)").arg(x._name, Utility::octetsToString(x._size));
+            if (!policyRuleName.isEmpty()) {
+                resStr += " (" + policyRuleName + ")";
+            }
+            return resStr;
+        }
         case Qt::ToolTipRole:
             return QString(QLatin1String("<qt>") + Utility::escape(x._size < 0 ? x._name : tr("%1 (%2)").arg(x._name, Utility::octetsToString(x._size))) + QLatin1String("</qt>"));
         case Qt::CheckStateRole:

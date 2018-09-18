@@ -19,7 +19,6 @@ class SyncRuleEditor : public QDialog
 public:
     explicit SyncRuleEditor(SyncJournalDb *journalDb, FolderStatusModel::SubFolderInfo *subFolderInfo, QWidget *parent = nullptr);
     ~SyncRuleEditor();
-    void setSyncRuleFocus();
     void showPolicyRules(int selectPolicyRulesId);
     void setSyncRule(FolderStatusModel::SubFolderInfo *subFolderInfo);
 
@@ -27,11 +26,6 @@ private:
     Ui::SyncRuleEditor *ui;
     ConfigDb *_pconfigDb;
     SyncJournalDb *_pjournalDb;
-
-    bool _hasRuleInDb;
-    int _inode;
-    FolderStatusModel::SubFolderInfo *_subFolderInfo;
-
 };
 }
 #endif // SYNCRULEEDITOR_H

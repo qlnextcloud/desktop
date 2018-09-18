@@ -66,9 +66,6 @@ class PropagatorJob : public QObject
 public:
     explicit PropagatorJob(OwncloudPropagator *propagator);
     static void updateSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path);
-    static void updateSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path,
-                                                int isExist, SyncJournalDb::SyncRuleInfo &syncInfo);
-    static void deleteSyncAndPolicyRule(SyncJournalDb *journalDb, int isExist, SyncJournalDb::SyncRuleInfo &syncInfo);
     static void deleteSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path);
 
     enum AbortType {

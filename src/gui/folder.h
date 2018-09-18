@@ -28,6 +28,15 @@
 #include <QObject>
 #include <QStringList>
 
+#define NEEDSCHEDULE 1
+#define NONEEDSCHEDULE 0
+#define NEEDSYNC 1
+#define NONEEDSYNC 0
+#define FORCESYNC 1
+#define NOFORCESYNC 0
+#define ENABLE 1
+#define DISENABLE 0
+
 class QThread;
 class QSettings;
 
@@ -187,6 +196,7 @@ public:
 
     // Used by the Socket API
     SyncJournalDb *journalDb() { return &_journal; }
+    ConfigDb *globalConfigDb() { return _pGlobalConfigDb; }
     SyncEngine &syncEngine() { return *_engine; }
 
     RequestEtagJob *etagJob() { return _requestEtagJob; }
@@ -231,13 +241,15 @@ public:
     void enableForceUpdateSubFolder();
     void disableForceUpdateSubFolder();
     bool isEnabledSubFolderForceSync();
-    void setForceSyncSubFolderLocalPath(QString& localPath);
-    void setForceSyncSubFolderRemotePath(QString& remotePath);
     void setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos,
                                 QDateTime &currentDateTime);
     bool isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
                    ConfigDb::PolicyInfo *policyRuleInfo,
                    QDateTime &currentDateTime);
+    void updateSyncRuleTimestamp();
+    void saveForceSyncFolderToDb(QString &path, int forceSync, int enabled);
+    void setForceSyncFolderPath(QString &path);
+
 
 signals:
     void syncStateChange();
@@ -384,6 +396,7 @@ private:
     bool _enabledforceSyncSubFolder;
     QString _forceSyncSubFolderLocalPath;
     QString _forceSyncSubFolderRemotePath;
+    QString _forceSyncFolder;
     //FolderStatusModel::SubFolderInfo *_forceSyncSubFolderInfo;
 
     QVector<QString> _currentSyncSubPath;

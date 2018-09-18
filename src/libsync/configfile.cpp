@@ -769,8 +769,6 @@ QString ConfigFile::globalConfigDbFile() const
     if (_globalConfigDbFile.isEmpty()) {
         _globalConfigDbFile = ConfigDb::makeDbName(configPath());
     }
-    qDebug() << "----isshe----: _globalConfigDbFile = " << _globalConfigDbFile;
-    qDebug() << "----isshe----: absoluteConfigDbPath = " << absoluteConfigDbPath();
     return _globalConfigDbFile;
 }
 

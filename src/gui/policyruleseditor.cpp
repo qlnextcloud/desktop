@@ -37,12 +37,11 @@ namespace OCC {
         _pconfigDb = ConfigDb::instance();
 
         if (!_pconfigDb->isConnected()) {
-            qDebug() << "----isshe----: ----数据库连接失败----";
             return;
         }
 
         ui->setupUi(this);
-        ui->descPolicyRulesLabel->setText(tr("-----isshe----- test description..."));
+        ui->descPolicyRulesLabel->setText(tr("These policy rules can be used in synchronization rules."));
         showPolicyRules();
 
         ui->policyRulesTableWidget->resizeColumnsToContents();
@@ -85,10 +84,8 @@ namespace OCC {
         simgleEditor->setDays(tempDays);
         //simgleEditor->setAttribute(Qt::WA_DeleteOnClose, true);
         if (simgleEditor->exec() != QDialog::Accepted) {
-            qDebug() << "-----isshe------: simgleEditor->exec() != QDialog::Accepted";
             return ;
         }
-        qDebug() << "-----isshe------: QDialog::Accepted: " << simgleEditor->getName();
 
         QString name = simgleEditor->getName();
         QString days = simgleEditor->getDays();
@@ -105,7 +102,6 @@ namespace OCC {
         int newRow = ui->policyRulesTableWidget->rowCount();
         ui->policyRulesTableWidget->setRowCount(newRow + 1);
 
-        qDebug() << "---isshe---: id = " << id << ", name = " << name << ", days = " << days;
         // 新一行的 ID 是空
         auto *idItem = new QTableWidgetItem();
         idItem->setText(id);
@@ -174,10 +170,8 @@ namespace OCC {
         bool ok = false;
         int referenced = referencedItem->text().toInt(&ok);
         if (!ok) {
-            qDebug() << "---isshe---: referenced 获取失败，不给删!!!";
             return;
         }
-        qDebug() << "---isshe---: slotRemoveCurrentItem referenced = " << referenced;
 
         ui->rmPolicyRulePushButton->setEnabled((referenced == 0));
         if (referenced) {
@@ -192,10 +186,8 @@ namespace OCC {
         bool ok = false;
         int referenced = referencedItem->text().toInt(&ok);
         if (!ok) {
-            qDebug() << "---isshe---: referenced 获取失败，不给删!!!";
             return;
         }
-        qDebug() << "---isshe---: slotRemoveCurrentItem referenced = " << referenced;
 
         if (referenced >= REF_TRUE) {
             QMessageBox::warning(this, tr("Error"), tr("Cannot delete this rule."));
@@ -235,7 +227,6 @@ namespace OCC {
         simgleEditor->setInterval(tempInterval, canEdit);
 
         if (simgleEditor->exec() != QDialog::Accepted) {
-            qDebug() << "-----isshe------: simgleEditor->exec() != QDialog::Accepted";
             delete(simgleEditor);
             return ;
         }
@@ -268,7 +259,6 @@ namespace OCC {
         }
 
         // 这里单位和
-        qDebug() << "----isshe----: PolirySimgleEditor::getHourUnit() = " << PolirySimgleEditor::getHourUnit();
         if (intervalAndUnit.contains(PolirySimgleEditor::getMinuteUnit())) {
             interval *= 60;
         }
@@ -325,17 +315,12 @@ namespace OCC {
 
         // delete all info
         if (!_pconfigDb->delAllPolicyInfo()) {
-            qDebug() << "----isshe----: delAllPolicyInfo failed!!!!!!-----";
             return;
         }
 
         // 先处理old（有ID的），new的ID自动分配
-        if (!addPolicyRules(oldRules)) {
-            qDebug() << "----isshe----: addPolicyRules oldRules failed!!!!-----";
-        }
-        if (!addPolicyRules(newRules)) {
-            qDebug() << "----isshe----: addPolicyRules newRules failed!!!!-----";
-        }
+        addPolicyRules(oldRules);
+        addPolicyRules(newRules);
     }
 
     bool PolicyRulesEditor::addPolicyRules(QVector<ConfigDb::PolicyInfo> &infos)
@@ -348,7 +333,6 @@ namespace OCC {
             {
                 if (!_pconfigDb->addPolicyInfo(*iter)) {
                     res = false;
-                    qDebug() << "----isshe---: add failed: id = " << iter->_id << ", name = " << iter->_name << ", days = " << iter->_days;
                     continue;        // next one
                 }
             }

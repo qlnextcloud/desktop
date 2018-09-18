@@ -135,6 +135,13 @@ public:
         int _needsync;
     };
 
+    struct ForceSyncInfo
+    {
+        QString _path;
+        int _forcesync;
+        int _enabled;
+    };
+
     void initSyncRuleInfo(SyncRuleInfo &info, QString &path, int policyRuleId = DEFAULT_POLICY_RULE_ID);
     QVector<SyncRuleInfo> getSyncRulesInfo();
     bool setSyncRulesInfo(SyncRuleInfo &info, bool ignore = false);
@@ -146,8 +153,16 @@ public:
     bool setNeedSyncAndScheduleByPaths(int needSchedule, int needSync, QVector<QString> &paths, int now, bool updateTimeStamp);
     QVector<SyncJournalDb::SyncRuleInfo> getSyncRulesByNeedSchedule(int needSchedule);
     QStringList getPathsByForceSyncAndNeedSync(int forceSync, int needSync, bool *ok);
-    bool setNeedSyncByPaths(int needSync, QVector<QString> &paths,
-                                           int now, bool updateTimeStamp);
+    bool setNeedSyncByPaths(int needSync, QVector<QString> &paths, int now, bool updateTimeStamp);
+    QString getPathsStr(QVector<QString> &paths);
+    int getPolicyRuleIdByPath(const QString &path);
+
+    bool setForceSyncInfo(SyncJournalDb::ForceSyncInfo &info);
+    QVector<SyncJournalDb::ForceSyncInfo> getForceSyncInfo();
+    QStringList getForceSyncPathList();
+
+
+
 
     DownloadInfo getDownloadInfo(const QString &file);
     void setDownloadInfo(const QString &file, const DownloadInfo &i);
@@ -302,6 +317,12 @@ private:
     QScopedPointer<SqlQuery> _setNeedSyncAndScheduleByPathsQuery;
     QScopedPointer<SqlQuery> _getSyncRulesByNeedScheduleQuery;
     QScopedPointer<SqlQuery> _getPathByForceSyncAndNeedSyncQuery;
+    QScopedPointer<SqlQuery> _getPolicyRuleIdByPathQuery;
+
+
+    QScopedPointer<SqlQuery> _getForceSyncInfosQuery;
+    QScopedPointer<SqlQuery> _setForceSyncInfoQuery;
+
 
 
 

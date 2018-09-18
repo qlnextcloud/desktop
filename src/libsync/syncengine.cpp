@@ -884,6 +884,8 @@ void SyncEngine::startSync()
         qCWarning(lcEngine) << "Unable to read NotTimeoutList, ignored.";
     }
 
+    discoveryJob->_forceSyncList = _journal->getForceSyncPathList();
+
     discoveryJob->_syncOptions = _syncOptions;
     discoveryJob->moveToThread(&_thread);
     connect(discoveryJob, &DiscoveryJob::finished, this, &SyncEngine::slotDiscoveryJobFinished);

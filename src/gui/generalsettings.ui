@@ -158,7 +158,7 @@
         <item>
          <widget class="QPushButton" name="policyRulesButton">
           <property name="text">
-           <string>Edit Policy</string>
+           <string>Edit Policy Rules</string>
           </property>
          </widget>
         </item>

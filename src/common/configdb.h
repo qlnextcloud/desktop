@@ -61,6 +61,7 @@ namespace OCC {
         bool isExistPolicyRule(int id);
         int getPolicyRulesReferencedById(int id);
         bool updatePolicryRuleReferenced(int id, bool increase);
+        QString getPolicyRuleNameById(int id);
 
     private:
         static ConfigDb *_instance;
@@ -77,6 +78,7 @@ namespace OCC {
         QScopedPointer<SqlQuery> _getPolicyRuleByIdQuery;
         QScopedPointer<SqlQuery> _getPolicyRulesReferencedByIdQuery;
         QScopedPointer<SqlQuery> _setPolicyRuleReferencedQuery;
+        QScopedPointer<SqlQuery> _getPolicyRuleNameByIdQuery;
     };
 
 }

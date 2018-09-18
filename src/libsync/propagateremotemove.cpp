@@ -176,11 +176,9 @@ void PropagateRemoteMove::finalize()
 
     // ----isshe----delete sync rule
     // if (isDir && path == name)
-    SyncJournalDb::SyncRuleInfo syncInfo;
-    int isExist = propagator()->_journal->getSyncRuleByPath(_item->_originalFile, &syncInfo);
     if (_item->isFirstSubFolder()) {
-        deleteSyncAndPolicyRule(propagator()->_journal, isExist, syncInfo);
-        //propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
+        deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
+
     }
 
     SyncJournalFileRecord record = _item->toSyncJournalFileRecordWithInode(propagator()->getFilePath(_item->_renameTarget));
@@ -209,7 +207,8 @@ void PropagateRemoteMove::finalize()
         // ----isshe----add sync rule
         // if (isDir && path == name)
         if (_item->isFirstSubFolder()){
-            updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
+            //updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
+            updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
         }
     }
 

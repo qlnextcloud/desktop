@@ -518,7 +518,6 @@ void OwncloudPropagator::start(const SyncFileItemVector &items)
                 directoriesToRemove.prepend(createJob(item));
                 removedDirectory = item->_file + "/";
             } else {
-                qDebug() << "----isshe-----: item->_file " << item->_file << ", priority_flag = " << item->_priority_flag;
                 if (item->_priority_flag == CSYNC_FILE_PRIORITY) {
                     directories.top().second->prependTask(item);
                 } else {
@@ -742,40 +741,23 @@ OwncloudPropagator *PropagatorJob::propagator() const
 
 void PropagatorJob::updateSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path)
 {
-    qDebug() << "---isshe----: updateSyncAndPolicyRule---1--------";
     SyncJournalDb::SyncRuleInfo syncInfo;
     int isExist = journalDb->getSyncRuleByPath(path, &syncInfo);
-    updateSyncAndPolicyRule(journalDb, path, isExist, syncInfo);
-}
-
-void PropagatorJob::updateSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path,
-                                            int isExist, SyncJournalDb::SyncRuleInfo &syncInfo)
-{
-    qDebug() << "---isshe----: updateSyncAndPolicyRule---2--------";
     if (isExist <= 0) {
         journalDb->initSyncRuleInfo(syncInfo, path);
-    } else {
-        syncInfo._path = path;
-    }
-    journalDb->setSyncRulesInfo(syncInfo, true);
-    ConfigDb::instance()->updatePolicryRuleReferenced(syncInfo._policyruleid, true);
-}
-
-void PropagatorJob::deleteSyncAndPolicyRule(SyncJournalDb *journalDb, int isExist, SyncJournalDb::SyncRuleInfo &syncInfo)
-{
-    qDebug() << "---isshe----: deleteSyncAndPolicyRule---1--------";
-    if (isExist > 0) {
-        journalDb->delSyncRuleByPath(syncInfo._path);
-        ConfigDb::instance()->updatePolicryRuleReferenced(syncInfo._policyruleid, false);
+        journalDb->setSyncRulesInfo(syncInfo, true);
+        ConfigDb::instance()->updatePolicryRuleReferenced(syncInfo._policyruleid, true);
     }
 }
 
 void PropagatorJob::deleteSyncAndPolicyRule(SyncJournalDb *journalDb, QString &path)
 {
-    qDebug() << "---isshe----: deleteSyncAndPolicyRule---2--------";
     SyncJournalDb::SyncRuleInfo syncInfo;
     int isExist = journalDb->getSyncRuleByPath(path, &syncInfo);
-    deleteSyncAndPolicyRule(journalDb, isExist, syncInfo);
+    if (isExist > 0) {
+        journalDb->delSyncRuleByPath(syncInfo._path);
+        ConfigDb::instance()->updatePolicryRuleReferenced(syncInfo._policyruleid, false);
+    }
 }
 
 // ================================================================================
@@ -973,8 +955,6 @@ void PropagateDirectory::slotFirstJobFinished(SyncFileItem::Status status)
 void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
 {
     if (!_item->isEmpty() && status == SyncFileItem::Success) {
-        SyncJournalDb::SyncRuleInfo syncInfo;
-        int isExist = propagator()->_journal->getSyncRuleByPath(_item->_originalFile, &syncInfo);
         if (!_item->_renameTarget.isEmpty()) {
             if (_item->_instruction == CSYNC_INSTRUCTION_RENAME
                 && _item->_originalFile != _item->_renameTarget) {
@@ -983,7 +963,7 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
                 // ----isshe----delete sync rule
                 // if (isDir && path == name)
                 if (_item->isFirstSubFolder()) {
-                    deleteSyncAndPolicyRule(propagator()->_journal, isExist, syncInfo);
+                    deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
                 }
             }
 
@@ -1012,7 +992,8 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
             // ----isshe----add sync rule
             // if (isDir && path == name)
             if (_item->isFirstSubFolder()){
-                updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
+                //updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
+                updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
             }
         }
     }

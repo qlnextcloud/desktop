@@ -12,18 +12,14 @@ namespace OCC {
     SyncRuleEditor::SyncRuleEditor(SyncJournalDb *journalDb, FolderStatusModel::SubFolderInfo *subFolderInfo, QWidget *parent) :
             QDialog(parent),
             _pjournalDb(journalDb),
-            _subFolderInfo(subFolderInfo),
-            _hasRuleInDb(false),
             ui(new Ui::SyncRuleEditor)
     {
         ui->setupUi(this);
         ui->groupBox->setTitle(tr("Set Sync Rule"));
         ui->selectRuleLabel->setText(tr("Select Rule"));
 
-        ui->selectRuleComboBox->addItem("None", NONE_RULE_ID);
         ui->selectRuleComboBox->setMinimumWidth(96);
 
-        //setSyncRuleFocus();
         // 读全局数据库
         _pconfigDb = ConfigDb::instance();
 
@@ -36,12 +32,11 @@ namespace OCC {
         int selectedPolicyRuleId = -1;
         QVector<SyncJournalDb::SyncRuleInfo> infos = _pjournalDb->getSyncRulesInfo();
         QVector<SyncJournalDb::SyncRuleInfo>::iterator iter;
-        QString subFolderPath = _subFolderInfo->_path;
+        QString subFolderPath = subFolderInfo->_path;
         subFolderPath.chop(1);      // 去掉 /
         for (iter = infos.begin(); iter != infos.end(); iter++) {
             if (subFolderPath == iter->_path) {
                 selectedPolicyRuleId = iter->_policyruleid;
-                _hasRuleInDb = true;
                 break;
             }
         }
@@ -72,21 +67,11 @@ namespace OCC {
         delete ui;
     }
 
-    void SyncRuleEditor::setSyncRuleFocus()
-    {
-
-        QPushButton* okBtn = ui->buttonBox->button(QDialogButtonBox::Ok);
-        okBtn->setFocus();
-        //QPushButton* caBtn = ui->buttonBox->button(QDialogButtonBox::Cancel);
-        //caBtn->setFocus();
-    }
-
     void SyncRuleEditor::setSyncRule(FolderStatusModel::SubFolderInfo *subFolderInfo)
     {
         // 检查subFolder的信息
         QString sFolderPath = subFolderInfo->_path;         // test/
         QString sFolderName = subFolderInfo->_name;         // test
-        qDebug() << "----isshe----: sFolderPath = " << sFolderPath << ", sFolderName = " << sFolderName;
 
         sFolderPath.chop(1);
         if (sFolderPath != sFolderName) {
@@ -122,8 +107,6 @@ namespace OCC {
         }
 
         // 以下就是新增或者是修改了
-        qDebug() << "----isshe----: policyRuleName = " << policyRuleName << ", policyRuleId = " << policyRuleId;
-
         // 查全局数据库获取策略规则信息（判断策略规则是否存在）
         if(!_pconfigDb->isExistPolicyRule(policyRuleId)) //, policyRuleName))
         {

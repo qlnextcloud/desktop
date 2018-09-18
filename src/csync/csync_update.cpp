@@ -121,9 +121,20 @@ static int _csync_detect_update(CSYNC *ctx, std::unique_ptr<csync_file_stat_t> f
       excluded =CSYNC_FILE_EXCLUDE_STAT_FAILED;
   } else {
     /* Check if file is excluded */
-    excluded = csync_excluded_traversal(ctx, fs->path, fs->type);
-      if (excluded == CSYNC_NOT_EXCLUDED && ctx->current == REMOTE_REPLICA && ctx->callbacks.checkSyncRulesNoNeedSyncListHook) {
-          if (ctx->callbacks.checkSyncRulesNoNeedSyncListHook(ctx->callbacks.update_callback_userdata, fs->path)) {
+      excluded = csync_excluded_traversal(ctx, fs->path, fs->type);
+      //if (excluded == CSYNC_NOT_EXCLUDED && ctx->current == REMOTE_REPLICA && ctx->callbacks.checkSyncRulesNoNeedSyncListHook) {
+      if (excluded == CSYNC_NOT_EXCLUDED)  {
+          int forceSync = -1;           // 沒開立即同步
+          if (fs->type == CSYNC_FTW_TYPE_DIR && ctx->callbacks.checkForceSyncForceSyncListHook) {
+              forceSync = ctx->callbacks.checkForceSyncForceSyncListHook(
+                      ctx->callbacks.update_callback_userdata, fs->path);
+          }
+          if (forceSync == 0) {        // 開了立即同步，但不是需要立即同步的目錄，就忽略
+              excluded = CSYNC_FILE_EXCLUDE_CUR_NO_NEED_SYNC;
+          } else if (fs->type == CSYNC_FTW_TYPE_DIR && forceSync == -1
+                     && ctx->callbacks.checkSyncRulesNoNeedSyncListHook
+                     && ctx->callbacks.checkSyncRulesNoNeedSyncListHook(
+                             ctx->callbacks.update_callback_userdata, fs->path)) {
               excluded = CSYNC_FILE_EXCLUDE_CUR_NO_NEED_SYNC;
           }
       }

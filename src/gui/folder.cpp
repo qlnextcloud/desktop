@@ -43,11 +43,6 @@
 #include <QMessageBox>
 #include <QPushButton>
 
-#define NEEDSCHEDULE 1
-#define NONEEDSCHEDULE 0
-#define NEEDSYNC 1
-#define NONEEDSYNC 0
-
 namespace OCC {
 
 Q_LOGGING_CATEGORY(lcFolder, "gui.folder", QtInfoMsg)
@@ -312,21 +307,13 @@ bool Folder::isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
 {
     // 检查星期
     int day = currentDateTime.date().dayOfWeek();
-    qDebug() << "-----isshe----: day = " << day << ", _days.at(day) = " << policyRuleInfo->_days.at(day);
     if (!PolirySimgleEditor::isDay(policyRuleInfo->_days, day)) {
         return false;
     }
 
     // 检查时间
     time_t now = Utility::qDateTimeToTime_t(currentDateTime);
-    /*
-    if (now < syncRuleInfo->_lastsynctime + policyRuleInfo->_interval){     // interval: seconds
-        return false;
-    }
 
-    return true;
-    */
-    qDebug() << "-----isshe----: now = " << now << ", _lastsynctime = " << syncRuleInfo->_lastsynctime << ", _interval = " << policyRuleInfo->_interval;
     return now >= syncRuleInfo->_lastsynctime + policyRuleInfo->_interval;
 }
 
@@ -631,8 +618,7 @@ void Folder::slotTerminateSync()
         // 不管同步结果如何，先把强制同步关了，强制同步失败，不进行重试
         if (isEnabledSubFolderForceSync()) {
             disableForceUpdateSubFolder();
-            _engine->restoreLocalPath();
-            _engine->restoreRemotePath();
+            saveForceSyncFolderToDb(_forceSyncFolder, NOFORCESYNC, DISENABLE);
         }
 
         _engine->abort();
@@ -864,6 +850,31 @@ void Folder::slotCsyncUnavailable()
     _csyncUnavail = true;
 }
 
+void Folder::updateSyncRuleTimestamp()
+{
+    if (!_currentSyncSubPath.isEmpty()) {
+        time_t now = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());
+        _journal.setNeedSyncByPaths(NONEEDSYNC, _currentSyncSubPath, (int)now, true);
+    }
+}
+
+
+
+void Folder::saveForceSyncFolderToDb(QString &path, int forceSync, int enabled)
+{
+    SyncJournalDb::ForceSyncInfo info;
+
+    info._path = path;
+    info._forcesync = forceSync;
+    info._enabled = enabled;
+    _journal.setForceSyncInfo(info);
+}
+
+void Folder::setForceSyncFolderPath(QString &path)
+{
+    _forceSyncFolder = path;
+}
+
 void Folder::slotSyncFinished(bool success)
 {
     qCInfo(lcFolder) << "Client version" << qPrintable(Theme::instance()->version())
@@ -874,8 +885,7 @@ void Folder::slotSyncFinished(bool success)
     // 不管同步结果如何，先把强制同步关了，强制同步失败，不进行重试
     if (isEnabledSubFolderForceSync()) {
         disableForceUpdateSubFolder();
-        _engine->restoreLocalPath();
-        _engine->restoreRemotePath();
+        saveForceSyncFolderToDb(_forceSyncFolder, NOFORCESYNC, DISENABLE);
     }
 
     bool syncError = !_syncResult.errorStrings().isEmpty();
@@ -896,17 +906,13 @@ void Folder::slotSyncFinished(bool success)
         qCWarning(lcFolder) << "csync not available.";
     } else if (_syncResult.foundFilesNotSynced()) {
         _syncResult.setStatus(SyncResult::Problem);
+        updateSyncRuleTimestamp();
     } else if (_definition.paused) {
         // Maybe the sync was terminated because the user paused the folder
         _syncResult.setStatus(SyncResult::Paused);
     } else {
-        // 这里把needSync状态改了
         _syncResult.setStatus(SyncResult::Success);
-
-        if (!_currentSyncSubPath.isEmpty()) {
-            time_t now = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());
-            _journal.setNeedSyncByPaths(NONEEDSYNC, _currentSyncSubPath, now, true);
-        }
+        updateSyncRuleTimestamp();
     }
 
     // Count the number of syncs that have failed in a row.
@@ -1192,16 +1198,6 @@ void Folder::disableForceUpdateSubFolder()
 bool Folder::isEnabledSubFolderForceSync()
 {
     return _enabledforceSyncSubFolder;
-}
-
-void Folder::setForceSyncSubFolderLocalPath(QString& localPath)
-{
-    _forceSyncSubFolderLocalPath = localPath;
-}
-
-void Folder::setForceSyncSubFolderRemotePath(QString& remotePath)
-{
-    _forceSyncSubFolderRemotePath = remotePath;
 }
 
 } // namespace OCC
