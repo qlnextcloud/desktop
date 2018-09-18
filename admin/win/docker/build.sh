@@ -14,7 +14,7 @@ su - user << EOF
   ../admin/win/download_runtimes.sh
   cmake .. -DCMAKE_TOOLCHAIN_FILE=../admin/win/Toolchain-mingw32-openSUSE.cmake \
   -DWITH_CRASHREPORTER=ON \
-  -DMIRALL_VERSION_SUFFIX=release \
+  -DMIRALL_VERSION_SUFFIX=-release \
   -DMIRALL_VERSION_BUILD=`date +%Y%m%d%H%M%S`
   make -j4
   make package

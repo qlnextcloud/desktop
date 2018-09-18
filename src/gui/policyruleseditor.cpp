@@ -383,13 +383,13 @@ namespace OCC {
     {
         if (_week.isEmpty())
         {
-            _week.append("Sunday");
-            _week.append("Monday");
-            _week.append("Tuesday");
-            _week.append("Wednesday");
-            _week.append("Thursday");
-            _week.append("Friday");
-            _week.append("Saturday");
+            _week.append(tr("Sunday"));
+            _week.append(tr("Monday"));
+            _week.append(tr("Tuesday"));
+            _week.append(tr("Wednesday"));
+            _week.append(tr("Thursday"));
+            _week.append(tr("Friday"));
+            _week.append(tr("Saturday"));
         }
     }
     QStringList PolicyRulesEditor::generateCurrentNameList() {

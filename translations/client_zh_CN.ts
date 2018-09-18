@@ -4,7 +4,7 @@
 <context>
     <name>ConfigDb</name>
     <message>
-        <location filename="../src/common/configdb.cpp" line="204"/>
+        <location filename="../src/common/configdb.cpp" line="203"/>
         <source>Default Rule</source>
         <translation>默认规则</translation>
     </message>
@@ -778,24 +778,24 @@
         <translation>无法读取系统排除的文件</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1034"/>
+        <location filename="../src/gui/folder.cpp" line="1028"/>
         <source>A new folder larger than %1 MB has been added: %2.
 </source>
         <translation>一个大于 %1 MB 的新文件夹 %2 已被添加。</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1037"/>
+        <location filename="../src/gui/folder.cpp" line="1031"/>
         <source>A folder from an external storage has been added.
 </source>
         <translation>一个来自外部存储的文件夹已被添加。</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1038"/>
+        <location filename="../src/gui/folder.cpp" line="1032"/>
         <source>Please go in the settings to select it if you wish to download it.</source>
         <translation>如果您想下载，请到设置页面选择它。</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1073"/>
+        <location filename="../src/gui/folder.cpp" line="1067"/>
         <source>All files in the sync folder &apos;%1&apos; folder were deleted on the server.
 These deletes will be synchronized to your local sync folder, making such files unavailable unless you have a right to restore. 
 If you decide to keep the files, they will be re-synced with the server if you have rights to do so.
@@ -806,7 +806,7 @@ If you decide to delete the files, they will be unavailable to you, unless you a
 如果您决定删除这些文件，它们将不再可用，除非您是其所有者。</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1078"/>
+        <location filename="../src/gui/folder.cpp" line="1072"/>
         <source>All the files in your local sync folder &apos;%1&apos; were deleted. These deletes will be synchronized with your server, making such files unavailable unless restored.
 Are you sure you want to sync those actions with the server?
 If this was an accident and you decide to keep your files, they will be re-synced from the server.</source>
@@ -815,22 +815,22 @@ If this was an accident and you decide to keep your files, they will be re-synce
 如果这是一个意外而您想要保留这些文件，他们会被重新从服务器同步过来。</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1082"/>
+        <location filename="../src/gui/folder.cpp" line="1076"/>
         <source>Remove All Files?</source>
         <translation>删除所有文件？</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1085"/>
+        <location filename="../src/gui/folder.cpp" line="1079"/>
         <source>Remove all files</source>
         <translation>删除所有文件</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1086"/>
+        <location filename="../src/gui/folder.cpp" line="1080"/>
         <source>Keep files</source>
         <translation>保持所有文件</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1103"/>
+        <location filename="../src/gui/folder.cpp" line="1097"/>
         <source>This sync would reset the files to an earlier time in the sync folder &apos;%1&apos;.
 This might be because a backup was restored on the server.
 Continuing the sync as normal will cause all your files to be overwritten by an older file in an earlier state. Do you want to keep your local most recent files as conflict files?</source>
@@ -839,17 +839,17 @@ Continuing the sync as normal will cause all your files to be overwritten by an 
 继续正常同步将导致您全部文件被更早状态的旧文件覆盖。您想要保留冲突文件的本地最新版本吗？</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1108"/>
+        <location filename="../src/gui/folder.cpp" line="1102"/>
         <source>Backup detected</source>
         <translation>备份已删除</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1111"/>
+        <location filename="../src/gui/folder.cpp" line="1105"/>
         <source>Normal Synchronisation</source>
         <translation>正常同步</translation>
     </message>
     <message>
-        <location filename="../src/gui/folder.cpp" line="1112"/>
+        <location filename="../src/gui/folder.cpp" line="1106"/>
         <source>Keep Local Files as Conflict</source>
         <translation>保留本地文件为冲突文件</translation>
     </message>
@@ -2146,8 +2146,8 @@ It is not advisable to use it.</source>
     <name>OCC::PolicyRulesEditor</name>
     <message>
         <location filename="../src/gui/policyruleseditor.ui" line="14"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <source>Policy Rules Editor</source>
+        <translation>策略规则编辑器</translation>
     </message>
     <message>
         <location filename="../src/gui/policyruleseditor.ui" line="20"/>
@@ -2239,13 +2239,48 @@ It is not advisable to use it.</source>
         <source>%1</source>
         <translation>%1</translation>
     </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="386"/>
+        <source>Sunday</source>
+        <translation>星期日</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="387"/>
+        <source>Monday</source>
+        <translation>星期一</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="388"/>
+        <source>Tuesday</source>
+        <translation>星期二</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="389"/>
+        <source>Wednesday</source>
+        <translation>星期三</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="390"/>
+        <source>Thursday</source>
+        <translation>星期四</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="391"/>
+        <source>Friday</source>
+        <translation>星期五</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/policyruleseditor.cpp" line="392"/>
+        <source>Saturday</source>
+        <translation>星期六</translation>
+    </message>
 </context>
 <context>
     <name>OCC::PolirySimgleEditor</name>
     <message>
         <location filename="../src/gui/polirysimgleeditor.ui" line="14"/>
-        <source>Dialog</source>
-        <translation>对话框</translation>
+        <source>Simgle Rule Editor</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/gui/polirysimgleeditor.ui" line="30"/>
@@ -2295,7 +2330,7 @@ It is not advisable to use it.</source>
     <message>
         <location filename="../src/gui/polirysimgleeditor.ui" line="182"/>
         <source>Sync Interval:</source>
-        <translation>同步间隔</translation>
+        <translation>同步间隔：</translation>
     </message>
     <message>
         <location filename="../src/gui/polirysimgleeditor.ui" line="192"/>
@@ -2303,24 +2338,32 @@ It is not advisable to use it.</source>
         <translation>星期的哪几天：</translation>
     </message>
     <message>
-        <location filename="../src/gui/polirysimgleeditor.cpp" line="70"/>
-        <location filename="../src/gui/polirysimgleeditor.cpp" line="74"/>
-        <location filename="../src/gui/polirysimgleeditor.cpp" line="78"/>
-        <source>%1</source>
-        <translation>%1</translation>
+        <location filename="../src/gui/polirysimgleeditor.cpp" line="67"/>
+        <source>Seconds</source>
+        <translation>秒</translation>
     </message>
     <message>
-        <location filename="../src/gui/polirysimgleeditor.cpp" line="152"/>
+        <location filename="../src/gui/polirysimgleeditor.cpp" line="71"/>
+        <source>Minute(s)</source>
+        <translation>分钟</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/polirysimgleeditor.cpp" line="75"/>
+        <source>Hour(s)</source>
+        <translation>小时</translation>
+    </message>
+    <message>
+        <location filename="../src/gui/polirysimgleeditor.cpp" line="149"/>
         <source>Name is Empty.</source>
         <translation>名称为空</translation>
     </message>
     <message>
-        <location filename="../src/gui/polirysimgleeditor.cpp" line="157"/>
+        <location filename="../src/gui/polirysimgleeditor.cpp" line="154"/>
         <source>Choose at least one day.</source>
         <translation>至少选择一天</translation>
     </message>
     <message>
-        <location filename="../src/gui/polirysimgleeditor.cpp" line="163"/>
+        <location filename="../src/gui/polirysimgleeditor.cpp" line="160"/>
         <source>This name already exists.</source>
         <translation>这个名称已经存在</translation>
     </message>
@@ -2337,8 +2380,8 @@ It is not advisable to use it.</source>
     <name>OCC::PriorityListEditor</name>
     <message>
         <location filename="../src/gui/prioritylisteditor.ui" line="14"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <source>Priority Files Editor</source>
+        <translation>优先文件编辑器</translation>
     </message>
     <message>
         <location filename="../src/gui/prioritylisteditor.ui" line="36"/>
@@ -3087,7 +3130,7 @@ It is not advisable to use it.</source>
     <message>
         <location filename="../src/gui/shareusergroupwidget.cpp" line="235"/>
         <source>Open link in browser</source>
-        <translation type="unfinished"></translation>
+        <translation>在浏览器中打开链接</translation>
     </message>
     <message>
         <location filename="../src/gui/shareusergroupwidget.cpp" line="237"/>
@@ -3200,7 +3243,7 @@ It is not advisable to use it.</source>
     <message>
         <location filename="../src/gui/socketapi.cpp" line="557"/>
         <source>I shared something with you</source>
-        <translation type="unfinished"></translation>
+        <translation>我分享一些东西给你</translation>
     </message>
     <message>
         <location filename="../src/gui/socketapi.cpp" line="565"/>
@@ -3739,7 +3782,7 @@ It is not advisable to use it.</source>
     </message>
     <message>
         <location filename="../src/gui/syncruleeditor.ui" line="42"/>
-        <location filename="../src/gui/syncruleeditor.cpp" line="18"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="19"/>
         <source>Set Sync Rule</source>
         <translation>设置同步规则</translation>
     </message>
@@ -3749,47 +3792,47 @@ It is not advisable to use it.</source>
         <translation>选择规则：</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="19"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="20"/>
         <source>Select Rule</source>
         <translation>选择规则</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="27"/>
-        <location filename="../src/gui/syncruleeditor.cpp" line="78"/>
-        <location filename="../src/gui/syncruleeditor.cpp" line="87"/>
-        <location filename="../src/gui/syncruleeditor.cpp" line="96"/>
-        <location filename="../src/gui/syncruleeditor.cpp" line="113"/>
-        <location filename="../src/gui/syncruleeditor.cpp" line="128"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="28"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="79"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="88"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="97"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="114"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="129"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="27"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="28"/>
         <source>Connect Db failed.</source>
         <translation>链接数据库失败</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="78"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="79"/>
         <source>Not the first level directory</source>
         <translation>不是一级目录</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="87"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="88"/>
         <source>Get policy rule failed.</source>
         <translation>获取策略规则失败</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="96"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="97"/>
         <source>Get Sync rule failed.</source>
         <translation>获取同步规则失败</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="113"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="114"/>
         <source>Policy rule may have been deleted.</source>
         <translation>策略规则可能已经被删除</translation>
     </message>
     <message>
-        <location filename="../src/gui/syncruleeditor.cpp" line="128"/>
+        <location filename="../src/gui/syncruleeditor.cpp" line="129"/>
         <source>Set Sync Rule Failed.</source>
         <translation>设置同步规则失败</translation>
     </message>
