@@ -3639,7 +3639,7 @@ It is not advisable to use it.</source>
     <message>
         <location filename="../src/libsync/syncengine.cpp" line="487"/>
         <source>Folder does not need to be sync in current.</source>
-        <translation>文件夹当前不需要更新</translation>
+        <translation>文件夹当前不需要同步</translation>
     </message>
     <message>
         <location filename="../src/libsync/syncengine.cpp" line="496"/>
