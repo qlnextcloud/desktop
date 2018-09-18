@@ -64,26 +64,6 @@ csync_s::csync_s(const char *localUri, OCC::SyncJournalDb *statedb)
   local_bk.uri = local.uri;
 }
 
-void restore_local_uri(CSYNC *ctx) {
-    if (ctx->local.uri && ctx->local.uri != ctx->local_bk.uri) {
-        SAFE_FREE(ctx->local.uri);
-        ctx->local.uri = ctx->local_bk.uri;
-    }
-}
-
-void set_local_uri(CSYNC *ctx, const char *local) {
-    size_t len = 0;
-
-    len = strlen(local);
-    while(len > 0 && local[len - 1] == '/') --len;
-
-    if (ctx->local.uri && ctx->local.uri != ctx->local_bk.uri) {
-        SAFE_FREE(ctx->local.uri);
-    }
-
-    ctx->local.uri = c_strndup(local, len);
-}
-
 int csync_update(CSYNC *ctx) {
   int rc = -1;
   struct timespec start, finish;

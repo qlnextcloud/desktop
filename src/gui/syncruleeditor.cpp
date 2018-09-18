@@ -11,8 +11,9 @@ namespace OCC {
 
     SyncRuleEditor::SyncRuleEditor(SyncJournalDb *journalDb, FolderStatusModel::SubFolderInfo *subFolderInfo, QWidget *parent) :
             QDialog(parent),
-            _pjournalDb(journalDb),
-            ui(new Ui::SyncRuleEditor)
+            ui(new Ui::SyncRuleEditor),
+            _pjournalDb(journalDb)
+
     {
         ui->setupUi(this);
         ui->groupBox->setTitle(tr("Set Sync Rule"));

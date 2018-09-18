@@ -101,12 +101,6 @@ public:
     static qint64 minimumFileAgeForUpload; // in ms
 
     //----isshe----: force sync sub folder
-    QString prepareLocalPath(const QString& path);
-    QString prepareRemotePath(const QString &path);
-    void updateLocalPath(QString &subdir);
-    void updateRemotePath(QString &subdir);
-    void restoreLocalPath();
-    void restoreRemotePath();
     PriorityFiles &priorityFiles() { return *_priorityFiles; }
 
 signals:

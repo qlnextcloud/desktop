@@ -754,12 +754,6 @@ void Folder::startSync(const QStringList &pathList)
 
     _engine->setIgnoreHiddenFiles(_definition.ignoreHiddenFiles);
 
-    // 设置 _engine 的强制同步目录
-    if (isEnabledSubFolderForceSync()) {
-        _engine->updateLocalPath(_forceSyncSubFolderLocalPath);
-        _engine->updateRemotePath(_forceSyncSubFolderRemotePath);
-    }
-
     QMetaObject::invokeMethod(_engine.data(), "startSync", Qt::QueuedConnection);
 
     emit syncStarted();
