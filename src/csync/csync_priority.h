@@ -20,7 +20,7 @@ typedef enum csync_priority_type_e CSYNC_PRIORITY_TYPE;
 
 //CSYNC_PRIORITY_TYPE csync_priority_traversal(CSYNC *ctx, const char *path, int filetype);
 
-int csync_priority_load(const char *fname, c_strlist_t **list);
+int OCSYNC_EXPORT csync_priority_load(const char *fname, c_strlist_t **list);
 
-CSYNC_PRIORITY_TYPE csync_priority_no_ctx(c_strlist_t *excludes, const char *path, int filetype);
+CSYNC_PRIORITY_TYPE OCSYNC_EXPORT csync_priority_no_ctx(c_strlist_t *excludes, const char *path, int filetype);
 #endif //CSYNC_PRIORITY_H
