@@ -200,7 +200,7 @@ namespace OCC {
         SqlQuery query(_db);
         query.prepare("INSERT OR IGNORE INTO policyrules (id, name, days, starttime, endtime, "
                       "interval, referenced) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)");
-        QString name = tr("Default Rule");
+        QString name = QObject::tr("Default Rule");
         query.bindValue(1, DEFAULT_POLICY_RULE_ID);
         query.bindValue(2, name);
         query.bindValue(3, QString(DEFAULT_POLICY_RULE_DAYS));

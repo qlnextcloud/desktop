@@ -2,14 +2,6 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN">
 <context>
-    <name>ConfigDb</name>
-    <message>
-        <location filename="../src/common/configdb.cpp" line="203"/>
-        <source>Default Rule</source>
-        <translation>默认规则</translation>
-    </message>
-</context>
-<context>
     <name>FolderWizardSourcePage</name>
     <message>
         <location filename="../src/gui/folderwizardsourcepage.ui" line="14"/>
@@ -3788,10 +3780,6 @@ It is not advisable to use it.</source>
     </message>
     <message>
         <location filename="../src/gui/syncruleeditor.ui" line="76"/>
-        <source>Select Rule:</source>
-        <translation>选择规则：</translation>
-    </message>
-    <message>
         <location filename="../src/gui/syncruleeditor.cpp" line="20"/>
         <source>Select Rule:</source>
         <translation>选择规则：</translation>
@@ -4340,6 +4328,11 @@ It is not advisable to use it.</source>
         <source>%1: %2</source>
         <extracomment>this displays an error string (%2) for a file %1</extracomment>
         <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location filename="../src/common/configdb.cpp" line="203"/>
+        <source>Default Rule</source>
+        <translation>默认规则</translation>
     </message>
 </context>
 <context>
