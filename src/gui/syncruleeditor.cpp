@@ -17,7 +17,7 @@ namespace OCC {
     {
         ui->setupUi(this);
         ui->groupBox->setTitle(tr("Set Sync Rule"));
-        ui->selectRuleLabel->setText(tr("Select Rule"));
+        ui->selectRuleLabel->setText(tr("Select Rule:"));
 
         ui->selectRuleComboBox->setMinimumWidth(96);
 

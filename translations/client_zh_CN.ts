@@ -3793,8 +3793,8 @@ It is not advisable to use it.</source>
     </message>
     <message>
         <location filename="../src/gui/syncruleeditor.cpp" line="20"/>
-        <source>Select Rule</source>
-        <translation>选择规则</translation>
+        <source>Select Rule:</source>
+        <translation>选择规则：</translation>
     </message>
     <message>
         <location filename="../src/gui/syncruleeditor.cpp" line="28"/>
