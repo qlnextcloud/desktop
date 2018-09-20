@@ -519,6 +519,7 @@ void DiscoverySingleDirectoryJob::lsJobFinishedWithErrorSlot(QNetworkReply *r)
         // Default keep at EIO, see above
     }
 
+    // 这里发送错误信号
     emit finishedWithError(errnoCode == 0 ? EIO : errnoCode, msg);
     deleteLater();
 }

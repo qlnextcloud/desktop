@@ -224,8 +224,11 @@ QVariant FolderStatusModel::data(const QModelIndex &index, int role) const
         return (f->syncResult().numNewConflictItems() + f->syncResult().numOldConflictItems() > 0)
             ? QStringList(tr("There are unresolved conflicts. Click for details."))
             : QStringList();
-    case FolderStatusDelegate::FolderErrorMsg:
-        return f->syncResult().errorStrings();
+    case FolderStatusDelegate::FolderErrorMsg: {
+        // ---isshe---: 错误消息（目录文件夹那里显示的)
+        return QStringList();       // 不再返回错误信息
+        //return f->syncResult().errorStrings();
+    }
     case FolderStatusDelegate::SyncRunning:
         return f->syncResult().status() == SyncResult::SyncRunning;
     case FolderStatusDelegate::HeaderRole:
@@ -265,6 +268,9 @@ QVariant FolderStatusModel::data(const QModelIndex &index, int role) const
                     if (status == SyncResult::Problem) {
                         return theme->syncStateIcon(SyncResult::Success);
                     } else {
+                        if (status == SyncResult::Error || status == SyncResult::SetupError) {
+                            status = SyncResult::Problem;
+                        }
                         return theme->syncStateIcon(status);
                     }
                 }

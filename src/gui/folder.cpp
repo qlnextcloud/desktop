@@ -841,6 +841,7 @@ void Folder::setDirtyNetworkLimits()
 void Folder::slotSyncError(const QString &message, ErrorCategory category)
 {
     _syncResult.appendErrorString(message);
+    // 这里是发送信号给issueswidget,添加一行错误信息
     emit ProgressDispatcher::instance()->syncError(alias(), message, category);
 }
 

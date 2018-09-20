@@ -293,8 +293,11 @@ void ownCloudGui::slotComputeOverallSyncStatus()
         }
         trayMessage = allStatusStrings.join(QLatin1String("\n"));
 #endif
-
-        QIcon statusIcon = Theme::instance()->syncStateIcon(overallResult, true, contextMenuVisible());
+        SyncResult::Status tmpStatus = overallResult;
+        if (overallResult == SyncResult::Error || overallResult == SyncResult::SetupError) {
+            tmpStatus = SyncResult::Problem;
+        }
+        QIcon statusIcon = Theme::instance()->syncStateIcon(tmpStatus, true, contextMenuVisible());
         _tray->setIcon(statusIcon);
         _tray->setToolTip(trayMessage);
 
