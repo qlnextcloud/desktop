@@ -210,6 +210,8 @@ public:
     /// Removes the folder from the account's settings.
     void removeFromSettings() const;
 
+    QString getFirstLevelFolder(const QString &fullpath);
+
     /**
       * Returns whether a file inside this folder should be excluded.
       */

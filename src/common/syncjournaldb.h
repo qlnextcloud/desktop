@@ -161,6 +161,9 @@ public:
     QVector<SyncJournalDb::ForceSyncInfo> getForceSyncInfo();
     QStringList getForceSyncPathList();
 
+    QString getPathsStr(const QStringList &paths);
+    bool setNeedScheduleByPaths(int needSchedule, const QStringList &paths);
+
 
 
 

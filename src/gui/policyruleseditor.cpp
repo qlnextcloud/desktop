@@ -252,7 +252,7 @@ namespace OCC {
         int interval = 10;
         bool ok = false;
 
-        QString intervalStr = intervalAndUnit.section(" ", 0, 0);
+        QString intervalStr = intervalAndUnit.section(QLatin1Char(' '), 0, 0);
         int temp = intervalStr.toInt(&ok);
         if (ok) {
             interval = temp;

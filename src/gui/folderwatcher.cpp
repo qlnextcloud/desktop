@@ -90,17 +90,28 @@ void FolderWatcher::changeDetected(const QStringList &paths)
     _lastPaths = pathsSet;
     _timer.restart();
 
-    QSet<QString> changedPaths;
-
+    //QSet<QString> changedPaths;
+    QStringList firstLevalFolderList;
     // ------- handle ignores:
     for (int i = 0; i < paths.size(); ++i) {
         QString path = paths[i];
+
         if (pathIsIgnored(path)) {
             continue;
         }
 
-        changedPaths.insert(path);
+        QString folderPath = _folder->getFirstLevelFolder(path);
+        if (!folderPath.isEmpty()) {
+            firstLevalFolderList.append(folderPath);
+        }
+        //changedPaths.insert(path);
     }
+
+    if (firstLevalFolderList.count() > 0) {
+        _folder->journalDb()->setNeedScheduleByPaths(NEEDSCHEDULE, firstLevalFolderList);
+    }
+
+    /*
     if (changedPaths.isEmpty()) {
         return;
     }
@@ -109,6 +120,7 @@ void FolderWatcher::changeDetected(const QStringList &paths)
     foreach (const QString &path, changedPaths) {
         emit pathChanged(path);
     }
+     */
 }
 
 void FolderWatcher::addPath(const QString &path)

@@ -600,6 +600,18 @@ void Folder::removeFromSettings() const
     settings->remove(FolderMan::escapeAlias(_definition.alias));
 }
 
+QString Folder::getFirstLevelFolder(const QString &fullpath)
+{
+    QString basePath = path();
+    QString relativePath = fullpath.mid(basePath.size());
+    QString res;
+    if (!relativePath.isEmpty()) {
+        res = relativePath.section(QLatin1Char('/'), 0, 0);
+    }
+
+    return res;
+}
+
 bool Folder::isFileExcludedAbsolute(const QString &fullPath) const
 {
     return _engine->excludedFiles().isExcluded(fullPath, path(), _definition.ignoreHiddenFiles);

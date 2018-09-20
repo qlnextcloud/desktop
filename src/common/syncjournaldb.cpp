@@ -2239,6 +2239,22 @@ QString SyncJournalDb::getPathsStr(QVector<QString> &paths)
     return pathStr;
 }
 
+QString SyncJournalDb::getPathsStr(const QStringList &paths)
+{
+    QString pathStr;
+
+    for (int i = 0; i < paths.count(); i++) {
+        pathStr += "'" + paths.at(i) + "',";
+    }
+
+    if (pathStr.isEmpty()) {
+        return pathStr;
+    }
+
+    pathStr.chop(1);       // 去掉最后的","
+    return pathStr;
+}
+
 bool SyncJournalDb::setNeedSyncAndScheduleByPaths(int needSchedule, int needSync,
                                                   QVector<QString> &paths, int now, bool updateTimeStamp)
 {
@@ -2266,6 +2282,28 @@ bool SyncJournalDb::setNeedSyncAndScheduleByPaths(int needSchedule, int needSync
     return query.exec();
 }
 
+bool SyncJournalDb::setNeedScheduleByPaths(int needSchedule, const QStringList &paths)
+{
+    QString pathStr = getPathsStr(paths);
+    if (pathStr.isEmpty()) {
+        return false;
+    }
+
+    QMutexLocker locker(&_mutex);
+
+    if (!checkConnect()) {
+        return false;
+    }
+
+    QString sql = "UPDATE syncrules set needschedule="
+                  + QString::number(needSchedule)
+                  + " WHERE path IN (" + pathStr + ")";
+
+    SqlQuery query(_db);
+    query.prepare(sql);
+
+    return query.exec();
+}
 
 void SyncJournalDb::fillSyncRuleInfo(SyncJournalDb::SyncRuleInfo &info, QScopedPointer<SqlQuery> &query)
 {
