@@ -865,8 +865,6 @@ void Folder::updateSyncRuleTimestamp()
     }
 }
 
-
-
 void Folder::saveForceSyncFolderToDb(QString &path, int forceSync, int enabled)
 {
     SyncJournalDb::ForceSyncInfo info;

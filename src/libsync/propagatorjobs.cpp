@@ -81,11 +81,9 @@ bool PropagateLocalRemove::removeRecursively(const QString &path)
             // We need to delete the entries from the database now from the deleted vector
             foreach (const auto &it, deleted) {
                 propagator()->_journal->deleteFileRecord(_item->_originalFile + path + QLatin1Char('/') + it.first, it.second);
-                // ----isshe----delete sync rule
-                // if (isDir && path == name)
+                // -isshe-: delete sync rule
                 if (_item->isFirstSubFolder()) {
                     deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
-                    //propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
                 }
             }
             success = false;
@@ -97,8 +95,7 @@ bool PropagateLocalRemove::removeRecursively(const QString &path)
         if (!success && ok) {
             // This succeeded, so we need to delete it from the database now because the caller won't
             propagator()->_journal->deleteFileRecord(_item->_originalFile + path + QLatin1Char('/') + di.fileName(), isDir);
-            // ----isshe----delete sync rule
-            // if (isDir && path == name)
+            // -isshe-: delete sync rule
             if (_item->isFirstSubFolder()) {
                 deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
             }
@@ -145,11 +142,9 @@ void PropagateLocalRemove::start()
     }
     propagator()->reportProgress(*_item, 0);
     propagator()->_journal->deleteFileRecord(_item->_originalFile, _item->isDirectory());
-    // ----isshe----delete sync rule
-    // if (isDir && path == name)
+    // -isshe-: delete sync rule
     if (_item->isFirstSubFolder()) {
         deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
-        //propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
     }
 
     propagator()->_journal->commit("Local remove");
@@ -201,8 +196,7 @@ void PropagateLocalMkdir::start()
         return;
     }
 
-    // ----isshe----add sync rule
-    // if (isDir && path == name)
+    // -isshe-: add sync rule
     if (_item->isFirstSubFolder()){
         updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
     }
@@ -258,8 +252,7 @@ void PropagateLocalRename::start()
     propagator()->_journal->getFileRecord(_item->_originalFile, &oldRecord);
     propagator()->_journal->deleteFileRecord(_item->_originalFile);
 
-    // ----isshe----delete sync rule
-    // if (isDir && path == name)
+    // -isshe-: delete sync rule
     if (_item->isFirstSubFolder()) {
         deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
     }
@@ -284,10 +277,8 @@ void PropagateLocalRename::start()
             done(SyncFileItem::FatalError, tr("Error writing metadata to the database"));
             return;
         }
-        // ----isshe----add sync rule
-        // if (isDir && path == name)
+        // -isshe-: add sync rule
         if (_item->isFirstSubFolder()){
-            //updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
             updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
         }
 

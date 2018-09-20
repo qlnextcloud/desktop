@@ -174,8 +174,7 @@ void PropagateRemoteMove::finalize()
     // to the new record. It is not a problem to skip it here.
     propagator()->_journal->deleteFileRecord(_item->_originalFile);
 
-    // ----isshe----delete sync rule
-    // if (isDir && path == name)
+    // -isshe-: delete sync rule
     if (_item->isFirstSubFolder()) {
         deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
 
@@ -204,10 +203,8 @@ void PropagateRemoteMove::finalize()
             return;
         }
 
-        // ----isshe----add sync rule
-        // if (isDir && path == name)
+        // -isshe-: add sync rule
         if (_item->isFirstSubFolder()){
-            //updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
             updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
         }
     }

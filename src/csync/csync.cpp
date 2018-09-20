@@ -61,7 +61,6 @@ csync_s::csync_s(const char *localUri, OCC::SyncJournalDb *statedb)
   while(len > 0 && localUri[len - 1] == '/') --len;
 
   local.uri = c_strndup(localUri, len);
-  local_bk.uri = local.uri;
 }
 
 int csync_update(CSYNC *ctx) {
@@ -333,7 +332,6 @@ csync_s::~csync_s() {
   SAFE_FREE(local.uri);
   SAFE_FREE(error_string);
   local.uri = nullptr;
-  local_bk.uri = nullptr;
 }
 
 void *csync_get_userdata(CSYNC *ctx) {

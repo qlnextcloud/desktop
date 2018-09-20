@@ -126,11 +126,9 @@ void PropagateRemoteDelete::slotDeleteJobFinished()
 
     propagator()->_journal->deleteFileRecord(_item->_originalFile, _item->isDirectory());
 
-    // ----isshe----delete sync rule
-    // if (isDir && path == name)
+    // -isshe-: delete sync rule
     if (_item->isFirstSubFolder()) {
         deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
-        //propagator()->_journal->delSyncRuleByPath(_item->_originalFile);
     }
 
     propagator()->_journal->commit("Remote Remove");

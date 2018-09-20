@@ -210,8 +210,6 @@ public:
     /// Removes the folder from the account's settings.
     void removeFromSettings() const;
 
-    QString getFirstLevelFolder(const QString &fullpath);
-
     /**
       * Returns whether a file inside this folder should be excluded.
       */
@@ -239,7 +237,7 @@ public:
       */
     void setSaveBackwardsCompatible(bool save);
 
-    // ----isshe----: force sync sub folder
+    // -isshe-: force sync sub folder
     void enableForceUpdateSubFolder();
     void disableForceUpdateSubFolder();
     bool isEnabledSubFolderForceSync();
@@ -251,6 +249,7 @@ public:
     void updateSyncRuleTimestamp();
     void saveForceSyncFolderToDb(QString &path, int forceSync, int enabled);
     void setForceSyncFolderPath(QString &path);
+    QString getFirstLevelFolder(const QString &fullpath);
 
 
 signals:
@@ -394,7 +393,7 @@ private:
      */
     bool _saveBackwardsCompatible;
 
-    // ----isshe----: force sync sub folder
+    // -isshe-: force sync sub folder
     bool _enabledforceSyncSubFolder;
     QString _forceSyncSubFolderLocalPath;
     QString _forceSyncSubFolderRemotePath;

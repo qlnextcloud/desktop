@@ -179,7 +179,7 @@ struct OCSYNC_EXPORT csync_s {
   struct {
     char *uri = nullptr;
     FileMap files;
-  } local, local_bk;
+  } local;
 
   struct {
     FileMap files;

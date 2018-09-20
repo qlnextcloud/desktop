@@ -91,7 +91,7 @@ protected slots:
     void doExpand();
     void slotLinkActivated(const QString &link);
 
-    // ----isshe----: force sync sub folder
+    // -isshe-: force sync sub folder
     void slotForceSyncSubFolder();
     void slotSetSyncRule();
 

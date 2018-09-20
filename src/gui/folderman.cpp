@@ -1040,10 +1040,6 @@ void FolderMan::removeFolder(Folder *f)
         delete f;
     }
 
-    // 删除记录         // TODO:isshe
-
-    // 重置PolicryRules的引用
-
     emit folderListChanged(_folderMap);
 }
 

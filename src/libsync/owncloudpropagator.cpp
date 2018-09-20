@@ -504,7 +504,6 @@ void OwncloudPropagator::start(const SyncFileItemVector &items)
             } else {
                 PropagateDirectory *currentDirJob = directories.top().second;
 
-                //qDebug() << "----isshe-----: item->_file " << item->_file << ", priority_flag = " << item->_priority_flag;
                 if (item->_priority_flag == CSYNC_FILE_PRIORITY) {
                     currentDirJob->prependJob(dir);
                 } else {
@@ -960,8 +959,7 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
                 && _item->_originalFile != _item->_renameTarget) {
                 // Remove the stale entries from the database.
                 propagator()->_journal->deleteFileRecord(_item->_originalFile, true);
-                // ----isshe----delete sync rule
-                // if (isDir && path == name)
+                // -isshe-: delete sync rule
                 if (_item->isFirstSubFolder()) {
                     deleteSyncAndPolicyRule(propagator()->_journal, _item->_originalFile);
                 }
@@ -989,8 +987,7 @@ void PropagateDirectory::slotSubJobsFinished(SyncFileItem::Status status)
                 _item->_errorString = tr("Error writing metadata to the database");
                 qCWarning(lcDirectory) << "Error writing to the database for file" << _item->_file;
             }
-            // ----isshe----add sync rule
-            // if (isDir && path == name)
+            // -isshe-: add sync rule
             if (_item->isFirstSubFolder()){
                 //updateSyncAndPolicyRule(propagator()->_journal, _item->_file, isExist, syncInfo);
                 updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
@@ -1046,8 +1043,7 @@ void CleanupPollsJob::slotPollFinished()
             return;
         }
 
-        // ----isshe----add sync rule
-        // if (isDir && path == name)
+        // -isshe-: add sync rule
         if (job->_item->isFirstSubFolder()){
             PropagatorJob::updateSyncAndPolicyRule(_journal, job->_item->_file);
         }

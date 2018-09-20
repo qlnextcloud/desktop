@@ -128,13 +128,11 @@ Qt::ItemFlags FolderStatusModel::flags(const QModelIndex &index) const
 
 QVariant FolderStatusModel::data(const QModelIndex &index, int role) const
 {
-
     if (!index.isValid())
         return QVariant();
 
     if (role == Qt::EditRole)
         return QVariant();
-
 
     switch (classify(index)) {
     case AddButton: {
@@ -225,7 +223,7 @@ QVariant FolderStatusModel::data(const QModelIndex &index, int role) const
             ? QStringList(tr("There are unresolved conflicts. Click for details."))
             : QStringList();
     case FolderStatusDelegate::FolderErrorMsg: {
-        // ---isshe---: 错误消息（目录文件夹那里显示的)
+        // -isshe-: 错误消息（目录文件夹那里显示的)
         return QStringList();       // 不再返回错误信息
         //return f->syncResult().errorStrings();
     }

@@ -867,11 +867,9 @@ void PropagateDownloadFile::downloadFinished()
         if (isConflict) {
             propagator()->_journal->deleteFileRecord(fn);
             propagator()->_journal->commit("download finished");
-            // ----isshe----delete sync rule
-            // if (isDir && path == name)
+            // -isshe-: delete sync rule
             if (_item->isFirstSubFolder()) {
                 deleteSyncAndPolicyRule(propagator()->_journal, _item->_file);
-                //propagator()->_journal->delSyncRuleByPath(fn);
             }
         }
 
@@ -904,8 +902,7 @@ void PropagateDownloadFile::updateMetadata(bool isConflict)
         return;
     }
 
-    // ----isshe----add sync rule
-    // if (isDir && path == name)
+    // -isshe-: add sync rule
     if (_item->isFirstSubFolder()){
         updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
     }

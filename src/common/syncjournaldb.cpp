@@ -2187,42 +2187,6 @@ int SyncJournalDb::getSyncRuleByPath(QString &path, SyncRuleInfo *info)
     return 1;
 }
 
-/*
-bool SyncJournalDb::doSetNeedSyncAndScheduleByPaths(int needSchedule, int needSync,
-                                                    QString &pathStr, int now)
-{
-    if (pathStr.isEmpty()) {
-        return false;
-    }
-
-    QMutexLocker locker(&_mutex);
-
-    if (!checkConnect()) {
-        return false;
-    }
-
-    qDebug() << "-----isshe----: needSchedule = " << needSchedule << ", needSync = " << needSync << ", pathStr = " << pathStr;
-
-    //_setNeedSyncAndScheduleByPathsQuery->reset_and_clear_bindings();
-    //_setNeedSyncAndScheduleByPathsQuery->bindValue(1, pathStr.toLatin1());
-    //_setNeedSyncAndScheduleByPathsQuery->bindValue(2, needSchedule);
-    //_setNeedSyncAndScheduleByPathsQuery->bindValue(3, needSync);
-
-    //return _setNeedSyncAndScheduleByPathsQuery->exec();
-
-
-    QString sql = "UPDATE syncrules set " + "lastsynctime=" + QString::number(now)
-                  + ", needschedule=" + QString::number(needSchedule)
-                  + ", needsync=" + QString::number(needSync) + " WHERE path IN (" + pathStr + ")";
-
-    qCInfo(lcDb) << "----isshe----: sql = " << sql;
-    SqlQuery query(_db);
-    query.prepare(sql);
-
-    return query.exec();
-}
-*/
-
 QString SyncJournalDb::getPathsStr(QVector<QString> &paths)
 {
     QString pathStr;

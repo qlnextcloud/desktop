@@ -100,7 +100,7 @@ public:
      */
     static qint64 minimumFileAgeForUpload; // in ms
 
-    //----isshe----: force sync sub folder
+    //-isshe-: force sync sub folder
     PriorityFiles &priorityFiles() { return *_priorityFiles; }
 
 signals:
@@ -276,7 +276,7 @@ private:
     /** List of unique errors that occurred in a sync run. */
     QSet<QString> _uniqueErrors;
 
-    // ----isshe----: force sync sub folder
+    // -isshe-: force sync sub folder
     QString _localPathBackup;
     QString _remotePathBackup;
 };

@@ -152,8 +152,7 @@ void PropagateRemoteMkdir::success()
         return;
     }
 
-    // ----isshe----add sync rule
-    // if (isDir && path == name)
+    // -isshe-: add sync rule
     if (_item->isFirstSubFolder()){
         updateSyncAndPolicyRule(propagator()->_journal, _item->_file);
     }
