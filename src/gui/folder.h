@@ -241,16 +241,14 @@ public:
     void enableForceUpdateSubFolder();
     void disableForceUpdateSubFolder();
     bool isEnabledSubFolderForceSync();
-    void setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos,
-                                QDateTime &currentDateTime);
-    bool isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
-                   ConfigDb::PolicyInfo *policyRuleInfo,
-                   QDateTime &currentDateTime);
-    void updateSyncRuleTimestamp();
     void saveForceSyncFolderToDb(QString &path, int forceSync, int enabled);
     void setForceSyncFolderPath(QString &path);
     QString getFirstLevelFolder(const QString &fullpath);
-
+    bool delForceSyncFolderFromDb(QString &path);
+    bool isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
+                   ConfigDb::PolicyInfo *policyRuleInfo);
+    void updateSyncrulesPastTime(QVector<SyncJournalDb::SyncRuleInfo> &infos, bool clearPastTime);
+    void setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos, bool checkNeedSchedule);
 
 signals:
     void syncStateChange();
@@ -395,14 +393,18 @@ private:
 
     // -isshe-: force sync sub folder
     bool _enabledforceSyncSubFolder;
-    QString _forceSyncSubFolderLocalPath;
-    QString _forceSyncSubFolderRemotePath;
     QString _forceSyncFolder;
-    //FolderStatusModel::SubFolderInfo *_forceSyncSubFolderInfo;
 
-    QVector<QString> _currentSyncSubPath;
-    QVector<QString> _currentNoSyncSubPath;
     ConfigDb * _pGlobalConfigDb;
+    int _remotePollIntervalSeconds;
+
+    QVector<QString> _currentSyncSubFolderPaths;
+    QVector<QString> _currentNoSyncSubFolderPaths;
+    //QVector<QString> _timeoutAndNONeedSchedulePaths;
+    QVector<SyncJournalDb::SyncRuleInfo> _currentSyncSubFolderInfos;
+    QVector<SyncJournalDb::SyncRuleInfo> _currentNoSyncSubFolderInfos;
+    QVector<SyncJournalDb::SyncRuleInfo> _timeoutAndNONeedScheduleList;
+
 
 };
 }

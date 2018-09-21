@@ -128,8 +128,7 @@ public:
         QString _path;
         int _inode;
         int _policyruleid;
-        qint64 _lastsynctime;
-        int _forcesync;
+        int _pasttime;
         int _enabled;
         int _needschedule;
         int _needsync;
@@ -152,18 +151,20 @@ public:
     //bool doSetNeedSyncAndScheduleByPaths(int needSchedule, int needSync, QString &pathStr, int now, bool useNow);
     bool setNeedSyncAndScheduleByPaths(int needSchedule, int needSync, QVector<QString> &paths, int now, bool updateTimeStamp);
     QVector<SyncJournalDb::SyncRuleInfo> getSyncRulesByNeedSchedule(int needSchedule);
-    QStringList getPathsByForceSyncAndNeedSync(int forceSync, int needSync, bool *ok);
-    bool setNeedSyncByPaths(int needSync, QVector<QString> &paths, int now, bool updateTimeStamp);
+    QStringList getPathsByNeedSync(int needSync, bool *ok);
+    bool setNeedSyncByPaths(QVector<QString> &paths, int needSync);
     QString getPathsStr(QVector<QString> &paths);
     int getPolicyRuleIdByPath(const QString &path);
 
     bool setForceSyncInfo(SyncJournalDb::ForceSyncInfo &info);
     QVector<SyncJournalDb::ForceSyncInfo> getForceSyncInfo();
     QStringList getForceSyncPathList();
+    bool delForceSyncInfoByPath(QString &path);
 
     QString getPathsStr(const QStringList &paths);
     bool setNeedScheduleByPaths(int needSchedule, const QStringList &paths);
-
+    void updateSyncRulesPastTime(QVector<SyncJournalDb::SyncRuleInfo> &infos);
+    bool setNeedSyncAndScheduleByPaths(QVector<QString> &paths, int needSchedule, int needSync);
 
 
 
@@ -319,12 +320,14 @@ private:
     QScopedPointer<SqlQuery> _setOrIgnoreSyncRulesQuery;
     QScopedPointer<SqlQuery> _setNeedSyncAndScheduleByPathsQuery;
     QScopedPointer<SqlQuery> _getSyncRulesByNeedScheduleQuery;
-    QScopedPointer<SqlQuery> _getPathByForceSyncAndNeedSyncQuery;
+    QScopedPointer<SqlQuery> _getPathByNeedSyncQuery;
     QScopedPointer<SqlQuery> _getPolicyRuleIdByPathQuery;
+    QScopedPointer<SqlQuery> _setSyncRulesPastTimeQuery;
 
 
     QScopedPointer<SqlQuery> _getForceSyncInfosQuery;
     QScopedPointer<SqlQuery> _setForceSyncInfoQuery;
+    QScopedPointer<SqlQuery> _delForceSyncInfoByPathQuery;
 
 
 

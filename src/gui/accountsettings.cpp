@@ -308,7 +308,10 @@ void AccountSettings::slotCustomContextMenuRequested(const QPoint &pos)
         }
 
         Folder *subFolderParent = subInfo->_folder;
-        if (!subFolderParent->syncPaused()) {
+        if (!subFolderParent->syncPaused()
+            && !_model->isDirty()
+            && subInfo->_checked != Qt::Unchecked)
+        {
             ac = menu->addAction(tr("Force sync now"));
             ac->setEnabled(_accountState->isConnected());
             connect(ac, SIGNAL(triggered(bool)), this, SLOT(slotForceSyncSubFolder()));

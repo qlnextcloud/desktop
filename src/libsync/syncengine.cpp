@@ -879,9 +879,9 @@ void SyncEngine::startSync()
         return;
     }
 
-    discoveryJob->_syncrulesNoNeedSyncList = _journal->getPathsByForceSyncAndNeedSync(0, 0, &ok);
+    discoveryJob->_syncrulesNoNeedSyncList = _journal->getPathsByNeedSync(0, &ok);
     if (!ok) {
-        qCWarning(lcEngine) << "Unable to read NotTimeoutList, ignored.";
+        qCWarning(lcEngine) << "Unable to read _syncrulesNoNeedSyncList, ignored.";
     }
 
     discoveryJob->_forceSyncList = _journal->getForceSyncPathList();

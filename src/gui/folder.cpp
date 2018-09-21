@@ -68,6 +68,9 @@ Folder::Folder(const FolderDefinition &definition,
 
     _pGlobalConfigDb = ConfigDb::instance();
 
+    ConfigFile cfg;
+    _remotePollIntervalSeconds = cfg.remotePollInterval() / 1000;
+
     SyncResult::Status status = SyncResult::NotYetStarted;
     if (definition.paused) {
         status = SyncResult::Paused;
@@ -303,22 +306,19 @@ void Folder::slotRunEtagJob()
 }
 
 bool Folder::isTimeout(SyncJournalDb::SyncRuleInfo *syncRuleInfo,
-                       ConfigDb::PolicyInfo *policyRuleInfo, QDateTime &currentDateTime)
+                       ConfigDb::PolicyInfo *policyRuleInfo)
 {
-    // 检查星期
-    int day = currentDateTime.date().dayOfWeek();
+    // 检查日期
+    int day = QDateTime::currentDateTimeUtc().date().dayOfWeek();
     if (!PolirySimgleEditor::isDay(policyRuleInfo->_days, day)) {
         return false;
     }
 
     // 检查时间
-    time_t now = Utility::qDateTimeToTime_t(currentDateTime);
-
-    return now >= syncRuleInfo->_lastsynctime + policyRuleInfo->_interval;
+    return syncRuleInfo->_pasttime + _remotePollIntervalSeconds >= policyRuleInfo->_interval;
 }
 
-void Folder::setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos,
-                                    QDateTime &currentDateTime)
+void Folder::setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRuleinfos, bool checkNeedSchedule)
 {
     QVector<ConfigDb::PolicyInfo> policyRuleInfos = _pGlobalConfigDb->getPolicyInfo();
     QMap<int, ConfigDb::PolicyInfo *> map;
@@ -330,23 +330,59 @@ void Folder::setSyncOperationVector(QVector<SyncJournalDb::SyncRuleInfo> &syncRu
 
     QVector<SyncJournalDb::SyncRuleInfo>::iterator syncIter;
     for (syncIter = syncRuleinfos.begin(); syncIter != syncRuleinfos.end(); syncIter++) {
-        if (isTimeout(syncIter, map[syncIter->_policyruleid], currentDateTime)) {
-            _currentSyncSubPath.append(syncIter->_path);
-        } else {
-            _currentNoSyncSubPath.append(syncIter->_path);
+        if (isTimeout(syncIter, map[syncIter->_policyruleid])) {
+            // etag变的时候，就不需要校验NeedSchedule，因此所有都需要NeedSchedule
+            // etag没变，就需要校验NeedSchedule，并且NeedSchedule==1才需要同步
+            if (!checkNeedSchedule || (checkNeedSchedule && syncIter->_needschedule == 1)) {
+                _currentSyncSubFolderInfos.append(*syncIter);
+                _currentSyncSubFolderPaths.append(syncIter->_path);
+            } else {            // checkNeedSchedule && syncIter->_needschedule != 1
+                _timeoutAndNONeedScheduleList.append(*syncIter);
+                //_timeoutAndNONeedSchedulePaths.append(syncIter->_path);
+            }
+        } else {                // 未超时的一定不需要调度
+            _currentNoSyncSubFolderInfos.append(*syncIter);
+            _currentNoSyncSubFolderPaths.append(syncIter->_path);
+
+        }
+    }
+}
+
+void Folder::updateSyncrulesPastTime(QVector<SyncJournalDb::SyncRuleInfo> &infos, bool clearPastTime)
+{
+    if (infos.isEmpty()) {
+        return;
+    }
+
+    // 更新时间
+    QVector<SyncJournalDb::SyncRuleInfo>::iterator syncIter;
+    if (clearPastTime) {
+        for (syncIter = infos.begin(); syncIter != infos.end(); syncIter++) {
+            syncIter->_pasttime = 0;
+        }
+    } else {
+        for (syncIter = infos.begin(); syncIter != infos.end(); syncIter++) {
+            syncIter->_pasttime += _remotePollIntervalSeconds;
         }
     }
 
+    // 写到数据库
+    _journal.updateSyncRulesPastTime(infos);
 }
 
 void Folder::etagRetreived(const QString &etag)
 {
     // re-enable sync if it was disabled because network was down
     FolderMan::instance()->setSyncEnabled(true);
-    QDateTime currentDateTime = QDateTime::currentDateTimeUtc();
-    time_t now = Utility::qDateTimeToTime_t(currentDateTime);
-    _currentSyncSubPath.clear();
-    _currentNoSyncSubPath.clear();
+
+    _currentSyncSubFolderInfos.clear();
+    _currentSyncSubFolderPaths.clear();
+    _currentNoSyncSubFolderInfos.clear();
+    _currentNoSyncSubFolderPaths.clear();
+    _timeoutAndNONeedScheduleList.clear();
+
+    // 获取所有同步信息
+    QVector<SyncJournalDb::SyncRuleInfo> syncInfos = _journal.getSyncRulesInfo();
 
     if (_lastEtag != etag) {
 
@@ -354,25 +390,29 @@ void Folder::etagRetreived(const QString &etag)
         _lastEtag = etag;
         //slotScheduleThisFolder();
 
-        QVector<SyncJournalDb::SyncRuleInfo> syncInfos = _journal.getSyncRulesInfo();
-        setSyncOperationVector(syncInfos, currentDateTime);
+        // 分为需要调度(超时)和不需要调度(未超时)，两个数组
+        // 把不需要调度(未超时)的目录，时间+30s（具体+定时器时间），注意还是要设置NEEDSCHEDULE+NONEEDSYNC
+        setSyncOperationVector(syncInfos, false);
 
-        // 如果没有超时，这次不同步needsync = false，needschedule = true, 不更新时间戳
-        // 如果超时，立即同步needsync = true, needschedule = false，更新时间戳 (代码外面一层)
-        if (_currentNoSyncSubPath.count() > 0) {
-            _journal.setNeedSyncAndScheduleByPaths(NEEDSCHEDULE, NONEEDSYNC,
-                                                   _currentNoSyncSubPath, (int)now, false);
+        if (_currentNoSyncSubFolderPaths.count() > 0) {
+            // 只有这里和FolderWatcher会设置NEEDSCHEDULE!!!
+            _journal.setNeedSyncAndScheduleByPaths(_currentNoSyncSubFolderPaths, NEEDSCHEDULE, NONEEDSYNC);
         }
+
     } else {
-        // 获取所有需要调度的
-        QVector<SyncJournalDb::SyncRuleInfo> syncInfos = _journal.getSyncRulesByNeedSchedule(NEEDSCHEDULE);
-        setSyncOperationVector(syncInfos, currentDateTime);
-        // 计算已经超时的，放到同步列表中；不用管没有超时的
+        // 选出超时的并且需要调度的放到_currentSyncSubPath中
+        setSyncOperationVector(syncInfos, true);
     }
 
-    if (_currentSyncSubPath.count() > 0) {
-        _journal.setNeedSyncAndScheduleByPaths(NONEEDSCHEDULE, NEEDSYNC,
-                                               _currentSyncSubPath, (int)now, false); //true); 更新完成后再进行更新
+    // 超时,但不需要调度的，清零
+    updateSyncrulesPastTime(_timeoutAndNONeedScheduleList, true);
+
+    // 其他没超时的更新计时时间
+    updateSyncrulesPastTime(_currentNoSyncSubFolderInfos, false);
+
+    if (_currentSyncSubFolderPaths.count() > 0) {
+        // 只有这里会设置NEEDSYNC!!!
+        _journal.setNeedSyncAndScheduleByPaths(_currentSyncSubFolderPaths, NONEEDSCHEDULE, NEEDSYNC);
         slotScheduleThisFolder();
     }
 
@@ -630,7 +670,8 @@ void Folder::slotTerminateSync()
         // 不管同步结果如何，先把强制同步关了，强制同步失败，不进行重试
         if (isEnabledSubFolderForceSync()) {
             disableForceUpdateSubFolder();
-            saveForceSyncFolderToDb(_forceSyncFolder, NOFORCESYNC, DISENABLE);
+            delForceSyncFolderFromDb(_forceSyncFolder);
+            //saveForceSyncFolderToDb(_forceSyncFolder, NOFORCESYNC, DISENABLE);
         }
 
         _engine->abort();
@@ -857,14 +898,6 @@ void Folder::slotCsyncUnavailable()
     _csyncUnavail = true;
 }
 
-void Folder::updateSyncRuleTimestamp()
-{
-    if (!_currentSyncSubPath.isEmpty()) {
-        time_t now = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());
-        _journal.setNeedSyncByPaths(NONEEDSYNC, _currentSyncSubPath, (int)now, true);
-    }
-}
-
 void Folder::saveForceSyncFolderToDb(QString &path, int forceSync, int enabled)
 {
     SyncJournalDb::ForceSyncInfo info;
@@ -873,6 +906,11 @@ void Folder::saveForceSyncFolderToDb(QString &path, int forceSync, int enabled)
     info._forcesync = forceSync;
     info._enabled = enabled;
     _journal.setForceSyncInfo(info);
+}
+
+bool Folder::delForceSyncFolderFromDb(QString &path)
+{
+    return _journal.delForceSyncInfoByPath(path);
 }
 
 void Folder::setForceSyncFolderPath(QString &path)
@@ -890,7 +928,8 @@ void Folder::slotSyncFinished(bool success)
     // 不管同步结果如何，先把强制同步关了，强制同步失败，不进行重试
     if (isEnabledSubFolderForceSync()) {
         disableForceUpdateSubFolder();
-        saveForceSyncFolderToDb(_forceSyncFolder, NOFORCESYNC, DISENABLE);
+        delForceSyncFolderFromDb(_forceSyncFolder);
+        //saveForceSyncFolderToDb(_forceSyncFolder, NOFORCESYNC, DISENABLE);
     }
 
     bool syncError = !_syncResult.errorStrings().isEmpty();
@@ -911,19 +950,20 @@ void Folder::slotSyncFinished(bool success)
         qCWarning(lcFolder) << "csync not available.";
     } else if (_syncResult.foundFilesNotSynced()) {
         _syncResult.setStatus(SyncResult::Problem);
-        updateSyncRuleTimestamp();
     } else if (_definition.paused) {
         // Maybe the sync was terminated because the user paused the folder
         _syncResult.setStatus(SyncResult::Paused);
     } else {
         _syncResult.setStatus(SyncResult::Success);
-        updateSyncRuleTimestamp();
     }
 
     // Count the number of syncs that have failed in a row.
     if (_syncResult.status() == SyncResult::Success
-        || _syncResult.status() == SyncResult::Problem) {
+        || _syncResult.status() == SyncResult::Problem)
+    {
         _consecutiveFailingSyncs = 0;
+        updateSyncrulesPastTime(_currentSyncSubFolderInfos, true);
+        _journal.setNeedSyncByPaths(_currentSyncSubFolderPaths, NONEEDSYNC);
     } else {
         _consecutiveFailingSyncs++;
         qCInfo(lcFolder) << "the last" << _consecutiveFailingSyncs << "syncs failed";

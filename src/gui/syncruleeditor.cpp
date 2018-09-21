@@ -120,8 +120,7 @@ namespace OCC {
         newSyncInfo._path = sFolderPath;
         newSyncInfo._inode = 0;                    // 要不要inode：inode主要是为了应对改名的问题
         newSyncInfo._policyruleid = policyRuleId;
-        newSyncInfo._lastsynctime = Utility::qDateTimeToTime_t(QDateTime::currentDateTimeUtc());
-        newSyncInfo._forcesync = 0;                // Not ForceSync
+        newSyncInfo._pasttime = 0;
         newSyncInfo._needschedule = 0;
         newSyncInfo._needsync = 0;
         newSyncInfo._enabled = 1;
